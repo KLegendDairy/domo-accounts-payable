@@ -1,0 +1,173 @@
+/* MAIN SETUP */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.5;
+  background: #f4f4f4;
+}
+
+h2 {
+  text-align: center;
+}
+
+/* UTILITIES */
+.container {
+  max-width: 1750px;
+  margin: auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bg-dark {
+  background: #333;
+  color: #fff;
+}
+
+.mt-3 {
+  margin-top: 3rem;
+}
+
+.mt-1 {
+  margin-top: 1rem;
+}
+
+ul {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+}
+
+.btn {
+  display: inline-block;
+  border-bottom: 1px solid transparent;
+  color: #fff;
+  padding: 0.3rem 1.5rem 0.5rem 1.5rem;
+  border-radius: 3px;
+}
+
+.btn:hover {
+  border-bottom: 1px solid #fff;
+}
+
+.selected {
+  border-bottom: 1px solid coral;
+}
+
+.recommended {
+  background: #b2dcbb;
+}
+
+/* NAVBAR */
+.nav-container {
+  max-width: 1750px;
+  display: flex;
+  margin: auto;
+  justify-content: space-between;
+  align-self: center;
+  align-items: center;
+}
+
+#nav-bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 1rem;
+}
+
+#nav-bar ul {
+  justify-self: end;
+  display: flex;
+}
+
+#nav-bar ul li a {
+  padding: 0.75rem;
+  font-weight: bold;
+  margin-left: 0.5rem;
+}
+
+/* FILTER BAR */
+#filter {
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid #9e9e9e;
+  border-radius: 0;
+  outline: none;
+  height: 3rem;
+  width: 50%;
+  min-width: 300px;
+  font-size: 16px;
+  margin: 0 0 8px 0;
+  padding: 0 0 0 8px;
+}
+
+#filter:focus {
+  border-bottom: 1px solid coral;
+}
+
+/* DATA TABLE */
+#data-table {
+  border-collapse: collapse;
+  width: 75%;
+  border: 1px solid #ddd;
+  margin: 1.5rem;
+}
+
+#data-table th,
+#data-table td {
+  padding: 1em;
+}
+
+#data-table tr {
+  border-bottom: 1px solid #ddd;
+}
+
+#data-table tbody tr:hover {
+  background: #afe0f0;
+  color: #000;
+}
+
+thead {
+  background: #333;
+  color: #fff;
+}
+
+tr > td,
+thead th {
+  text-align: center;
+}
+
+tr > td:first-child,
+thead th:first-child {
+  text-align: left;
+}
+
+.recommended:hover {
+  background: #43a75a !important;
+}
+
+/* FOOTER */
+.footer-container {
+  display: flex;
+  margin: auto;
+  max-width: 1750px;
+  width: 95%;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+footer p {
+  text-align: center;
+}

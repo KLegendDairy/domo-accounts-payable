@@ -1,0 +1,21 @@
+{
+  "name": "Accounts Payable Approval App",
+  "version": "1.0.0",
+  "size": {
+    "width": 4,
+    "height": 5
+  },
+  "mapping": [
+    {
+      "dataSetId": "82889bbe-6592-4313-8554-a19958fd26d7",
+      "alias": "accountsPayableData",
+      "fields": [
+        { "alias": "amount", "columnName": "Amount Left To Pay" },
+        { "alias": "company", "columnName": "Community" }
+      ]
+    }
+  ],
+  "fileName": "manifest.json",
+  "proxyId": "4fc1fbdd-8b91-46b9-81e5-bc96ecf8d6d6",
+  "id": "53b9fd63-a73c-4511-a799-85b017ea96c7"
+}
