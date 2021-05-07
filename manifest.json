@@ -24,6 +24,21 @@
       ]
     }
   ],
+  "collections" : [
+    {
+      "name": "ap-approval-app-table",
+      "schema": { "columns": 
+        [
+          { "name": "record_id", "type": "STRING" },
+          { "name": "amt_to_pay", "type": "DECIMAL" },
+          { "name": "total_inv_amt", "type": "DECIMAL" },
+          { "name": "rec_for_pmt_timestamp", "type": "DATETIME" },
+          { "name": "approved", "type": "STRING" },
+          { "name": "approval_timestamp", "type": "DATETIME" }
+        ]
+      }
+    }
+  ],
   "fileName": "manifest.json",
   "proxyId": "4fc1fbdd-8b91-46b9-81e5-bc96ecf8d6d6",
   "id": "53b9fd63-a73c-4511-a799-85b017ea96c7"

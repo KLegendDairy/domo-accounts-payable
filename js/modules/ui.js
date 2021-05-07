@@ -2,6 +2,7 @@
 const summaryBtn = document.getElementById('summary-link');
 const mgtBtn = document.getElementById('mgt-prop-link');
 const devBtn = document.getElementById('dev-other-link');
+const paidBtn = document.getElementById('paid-invoices-link');
 const dataTable = document.getElementById('data-table');
 const totalDue = document.getElementById('total-amt-due');
 const filterBar = document.getElementById('filter');
@@ -14,6 +15,7 @@ const amtRemainingHead = document.getElementById('amt-remaining-head');
   summaryBtn.addEventListener('click', navClicked);
   mgtBtn.addEventListener('click', navClicked);
   devBtn.addEventListener('click', navClicked);
+  paidBtn.addEventListener('click', navClicked);
   filterBar.addEventListener('keyup', filterList);
   dataTable.addEventListener('change', checkBoxCheck);
 })();
@@ -61,6 +63,7 @@ function paintSummaryTable(data) {
 
   dataTable.innerHTML = htmlToAdd;
   totalDue.innerHTML = displayCurrency(totalAmt);
+  amtRemainingHead.innerHTML = displayCurrency(totalAmt);
 };
 
 // PAINT MGT TABLE
@@ -135,6 +138,10 @@ function navClicked(e) {
     if(!e.target.classList.contains('selected')) {
       getInitTableData(`/data/v1/accountsPayableData?sum=amount&groupby=company,company_group`);
     }
+  } else if(e.target.id === 'paid-invoices-link') {
+    if(!e.target.classList.contains('selected')) {
+      
+    }
   };
 
   removeClass('selected');
@@ -171,7 +178,10 @@ function filterList(e) {
     };
   };
 
+  let newRemaining = newAmt - parseFloat(amtToPayHead.innerText.replace(/[$,]+/g,""))
+
   totalDue.innerHTML = displayCurrency(newAmt);
+  amtRemainingHead.innerHTML = displayCurrency(newRemaining);
 
   e.preventDefault();
 };
