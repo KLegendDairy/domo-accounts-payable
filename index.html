@@ -21,7 +21,9 @@
 
   <div class="container">
     <h2 class ="mt-1" id="total-header">Total Amount Due: <span id="total-amt-due">$0</span></h2>
-    <div class="input-field">
+    <h2 class ="mt-1" id="amt-to-pay-header">Amount to Pay: <span class="negative-num" id="amt-to-pay-head">$0</span></h2>
+    <h2 class ="mt-1" id="amt-to-pay-header">Amount Remaining: <span class="warning-num" id="amt-remaining-head">$0</span></h2>
+    <div class="input-field mt-1">
       <input type="text" name="filter" id="filter" placeholder="Type to search...">
     </div>
     <table id="data-table" class="table-styles mt-3"></table>
@@ -35,6 +37,7 @@
 
   <script src="./js/helpers/domo.js"></script>
   <script src="./js/modules/ui.js"></script>
+  <script src="./js/modules/data.js"></script>
   <script src="./js/app.js"></script>
 </body>
 </html>

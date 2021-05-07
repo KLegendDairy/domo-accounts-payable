@@ -2,8 +2,8 @@
   "name": "Accounts Payable Approval App",
   "version": "1.0.0",
   "size": {
-    "width": 4,
-    "height": 5
+    "width": 6,
+    "height": 6
   },
   "mapping": [
     {
@@ -11,7 +11,16 @@
       "alias": "accountsPayableData",
       "fields": [
         { "alias": "amount", "columnName": "Amount Left To Pay" },
-        { "alias": "company", "columnName": "Community" }
+        { "alias": "company", "columnName": "Community" },
+        { "alias": "unique_id", "columnName": "unique_id" },
+        { "alias": "vendor", "columnName": "VENDORNAME" },
+        { "alias": "bdcUrl", "columnName": "BILL_URL" },
+        { "alias": "dueInDays", "columnName": "DUE_IN_DAYS" },
+        { "alias": "onHold", "columnName": "On Hold" },
+        { "alias": "billDate", "columnName": "Bill Date" },
+        { "alias": "dueDate", "columnName": "Due Date" },
+        { "alias": "ap_group", "columnName": "company_ap_group" },
+        { "alias": "company_group", "columnName": "company_group" }
       ]
     }
   ],

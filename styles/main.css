@@ -34,6 +34,10 @@ h2 {
   margin-top: 3rem;
 }
 
+.mt-2 {
+  margin-top: 2rem;
+}
+
 .mt-1 {
   margin-top: 1rem;
 }
@@ -66,6 +70,14 @@ a {
   background: #b2dcbb;
 }
 
+.negative-num {
+  color: red;
+}
+
+.warning-num {
+  color: orange;
+}
+
 /* NAVBAR */
 .nav-container {
   max-width: 1750px;
@@ -94,7 +106,7 @@ a {
   margin-left: 0.5rem;
 }
 
-/* FILTER BAR */
+/* FILTER BAR AND BUTTON*/
 #filter {
   background-color: transparent;
   border: none;
