@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "size": {
     "width": 6,
-    "height": 6
+    "height": 3
   },
   "mapping": [
     {
@@ -20,16 +20,19 @@
         { "alias": "billDate", "columnName": "Bill Date" },
         { "alias": "dueDate", "columnName": "Due Date" },
         { "alias": "ap_group", "columnName": "company_ap_group" },
-        { "alias": "company_group", "columnName": "company_group" }
+        { "alias": "company_group", "columnName": "company_group" },
+        { "alias": "invoice_num", "columnName": "Invoice" }
+
       ]
     }
   ],
   "collections" : [
     {
-      "name": "ap-approval-app-table",
+      "name": "ap-app-data",
       "schema": { "columns": 
         [
-          { "name": "record_id", "type": "STRING" },
+          { "name": "ap_group", "type": "STRING" },
+          { "name": "unique_id", "type": "STRING" },
           { "name": "amt_to_pay", "type": "DECIMAL" },
           { "name": "total_inv_amt", "type": "DECIMAL" },
           { "name": "rec_for_pmt_timestamp", "type": "DATETIME" },

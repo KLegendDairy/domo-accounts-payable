@@ -78,6 +78,15 @@ a {
   color: coral;
 }
 
+/* LOADING SPINNER */
+
+#spinner {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
 /* NAVBAR */
 .nav-container {
   max-width: 1750px;
@@ -131,6 +140,12 @@ a {
   width: 75%;
   border: 1px solid #ddd;
   margin: 1.5rem;
+}
+
+#data-table th {
+  position: sticky;
+  top: 80px;
+  background: #333;
 }
 
 #data-table th,

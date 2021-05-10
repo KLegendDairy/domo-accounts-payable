@@ -32,6 +32,25 @@ function displayCurrency(num) {
   return formatter.format(Math.round(parseFloat(num))).replace(/\D00(?=\D*$)/,'');
 };
 
+// FUNCTIONS TO CONTROL LOADING OF SCREEN
+function startLoad() {
+  const container = document.querySelector('.container');
+  container.style.display = 'none';
+  const spinner = document.getElementById('spinner');
+  spinner.style.display = 'block';
+};
+
+function endLoad() {
+  const spinner = document.getElementById('spinner');
+  if (spinner) {
+    spinner.style.display = 'none';
+    const container = document.querySelector('.container');
+    container.style.display = '';
+  }
+
+  return false;
+};
+
 
 // DATA TABLE ITEMS
 
@@ -64,10 +83,11 @@ function paintSummaryTable(data) {
   dataTable.innerHTML = htmlToAdd;
   totalDue.innerHTML = displayCurrency(totalAmt);
   amtRemainingHead.innerHTML = displayCurrency(totalAmt);
+  endLoad();
 };
 
 // PAINT MGT TABLE
-function paintMgtTable(data) {
+function paintTabTable(data) {
   dataTable.innerHTML = '';
   totalDue.innerHTML = '$0';
   let totalAmt = 0;
@@ -80,34 +100,36 @@ function paintMgtTable(data) {
       <th>Days Past Due</th>
       <th>Company</th>
       <th>Vendor Name</th>
+      <th>Invoice Desc</th>
       <th>Bill.com</th>
       <th>Total Amt Due</th>
     </thead>
+    <tbody>
   `;
 
   data.forEach(inv => {
     htmlToAdd += `
-      <tbody>
-        <tr id="row-${inv.unique_id}" class="data-table-row">
-          <td><input type="checkbox" class="recommend-check" id="rec-${inv.unique_id}"></td>
-          <td class="to-pay">$0</td>
-          <td class="amt-remaining">${displayCurrency(inv.amount)}</td>
-          <td>${inv.status}</td>
-          <td>${inv.dueInDays < 0 ? 'N/A' : inv.dueInDays}</td>
-          <td class="company">${inv.company}</td>
-          <td class ="vendor">${inv.vendor}</td>
-          <td>${inv.bdcUrl ? '<a href="' + inv.bdcUrl + '" target="_blank">' + inv.unique_id + '</a>' : ''}</td>
-          <td class="tot-amt">${displayCurrency(inv.amount)}</td>
-        </tr>
-      </tbody>
+      <tr id="${inv.recommended ? inv.objId : 'row-' + inv.unique_id}" class="data-table-row${inv.recommended ? ' recommended' : ''}">
+        <td><input type="checkbox" class="recommend-check" id="rec-${inv.unique_id}"${inv.recommended ? ' checked' : ''}></td>
+        <td class="to-pay">$0</td>
+        <td class="amt-remaining">${displayCurrency(inv.amount)}</td>
+        <td>${inv.status}</td>
+        <td>${inv.dueInDays < 0 ? 'N/A' : inv.dueInDays}</td>
+        <td class="company" id="${inv.ap_group}">${inv.company}</td>
+        <td class ="vendor">${inv.vendor}</td>
+        <td class ="description">${inv.invoice_num}</td>
+        <td>${inv.bdcUrl ? '<a href="' + inv.bdcUrl + '" target="_blank">' + inv.unique_id + '</a>' : ''}</td>
+        <td class="tot-amt">${displayCurrency(inv.amount)}</td>
+      </tr>
     `;
     totalAmt += inv.amount;
   });
 
+  htmlToAdd += `</tbody>`
   dataTable.innerHTML = htmlToAdd;
   totalDue.innerHTML = displayCurrency(totalAmt);
   amtRemainingHead.innerHTML = displayCurrency(totalAmt);
-
+  endLoad();
 };
 
 
@@ -128,15 +150,18 @@ function addClass(id, className) {
 function navClicked(e) {
   if(e.target.id === 'mgt-prop-link') {
     if(!e.target.classList.contains('selected')) {
-      getMgtTableData(`/data/v1/accountsPayableData?sum=amount&groupby=unique_id,company,vendor,billDate,dueDate,dueInDays,bdcUrl,onHold&filter=ap_group in ["Mgt %26 Prop Co"]`);
+      getTabTableData(`/data/v1/accountsPayableData?sum=amount&groupby=unique_id,company,vendor,billDate,dueDate,dueInDays,bdcUrl,onHold,ap_group,invoice_num&filter=ap_group in ["Mgt %26 Prop Co"]`);
+      filterBar.style.display = 'none';
     }
   } else if(e.target.id === 'dev-other-link') {
     if(!e.target.classList.contains('selected')) {
-      
+      getTabTableData(`/data/v1/accountsPayableData?sum=amount&groupby=unique_id,company,vendor,billDate,dueDate,dueInDays,bdcUrl,onHold,ap_group,invoice_num&filter=ap_group in ["Fund, Dev %26 Other"]`);
+      filterBar.style.display = 'none';
     }
   } else if(e.target.id === 'summary-link') {
     if(!e.target.classList.contains('selected')) {
       getInitTableData(`/data/v1/accountsPayableData?sum=amount&groupby=company,company_group`);
+      filterBar.style.display = '';
     }
   } else if(e.target.id === 'paid-invoices-link') {
     if(!e.target.classList.contains('selected')) {
@@ -195,6 +220,8 @@ function checkBoxCheck(e) {
         let pay = e.target.parentElement.parentElement.getElementsByClassName('to-pay')[0];
         let amt = e.target.parentElement.parentElement.getElementsByClassName('tot-amt')[0];
         let amtRemaining = e.target.parentElement.parentElement.getElementsByClassName('amt-remaining')[0];
+        let compGroup = e.target.parentElement.parentElement.getElementsByClassName('company')[0];
+        let recordId = e.target.parentElement.parentElement.id;
 
         pay.innerHTML = amt.innerText;
         amtRemaining.innerHTML = '$0';
@@ -208,6 +235,22 @@ function checkBoxCheck(e) {
         const newRemaining = currentTotal - newAmtToPay;
 
         amtRemainingHead.innerHTML = displayCurrency(newRemaining);
+
+        const apGroup = compGroup.id;
+        const uniqueId = recordId.substring(4);
+        const amtToPay = payHead;
+        const totalInvAmt = parseFloat(amt.innerText.replace(/[$,]+/g,""));
+        const rightNow = new Date();
+        const recForPmtTimestamp = rightNow.toISOString();
+        const invoiceData = {
+          ap_group: apGroup,
+          unique_id: uniqueId,
+          amt_to_pay: amtToPay,
+          total_inv_amt: totalInvAmt,
+          rec_for_pmt_timestamp: recForPmtTimestamp
+        }
+
+        saveInvoiceToDatabase(invoiceData, `row-${uniqueId}`);
       };
     } else {
       if(e.target.parentElement.parentElement.classList.contains('recommended')) {
@@ -215,6 +258,8 @@ function checkBoxCheck(e) {
         let pay = e.target.parentElement.parentElement.getElementsByClassName('to-pay')[0];
         let amt = e.target.parentElement.parentElement.getElementsByClassName('tot-amt')[0];
         let amtRemaining = e.target.parentElement.parentElement.getElementsByClassName('amt-remaining')[0];
+        let recordId = e.target.parentElement.parentElement.id;
+        let id = e.target.id;
 
         const payHead = parseFloat(pay.innerText.replace(/[$,]+/g,""));
         const currentPayHead = parseFloat(amtToPayHead.innerText.replace(/[$,]+/g,""));
@@ -228,6 +273,9 @@ function checkBoxCheck(e) {
 
         pay.innerHTML = '$0';
         amtRemaining.innerHTML = amt.innerText;
+        const record = id.substring(4);
+
+        deleteInvoiceFromDatabase(recordId, record);
       };
     };
   };
