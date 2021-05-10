@@ -28,10 +28,12 @@ function getTabTableData(query) {
       appData.forEach(inv => {
         id = inv.content.unique_id.toString();
         objId = inv.id;
+        amtToPay = inv.content.amt_to_pay;
         db.push(id);
         obj.push({
           id,
-          objId
+          objId,
+          amtToPay
         });
         // console.log(db);
       })
@@ -74,6 +76,7 @@ function getTabTableData(query) {
               obj.forEach(item => {
                 index = responseData.findIndex(inv => inv.unique_id == item.id);
                 responseData[index].objId = item.objId;
+                responseData[index].amtToPay = item.amtToPay;
               });
               paintTabTable(responseData);
             })
@@ -82,10 +85,11 @@ function getTabTableData(query) {
             responseData.sort((a,b) => {
               return b.amount - a.amount
             });
-            obj.forEach(item => {
-              index = responseData.findIndex(inv => inv.unique_id == item.id);
-              responseData[index].objId = item.objId;
-            });
+            // obj.forEach(item => {
+            //   index = responseData.findIndex(inv => inv.unique_id == item.id);
+            //   responseData[index].objId = item.objId;
+            //   responseData[index].amtToPay = item.amtToPay
+            // });
             paintTabTable(responseData)
           };
           

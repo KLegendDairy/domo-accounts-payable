@@ -9,6 +9,7 @@ const filterBar = document.getElementById('filter');
 const tableRow = dataTable.getElementsByTagName('tr');
 const amtToPayHead = document.getElementById('amt-to-pay-head');
 const amtRemainingHead = document.getElementById('amt-remaining-head');
+const footerYear = document.getElementById('year-foot');
 
 // LOAD EVENT LISTENERS
 (function loadEventListeners() {
@@ -18,6 +19,13 @@ const amtRemainingHead = document.getElementById('amt-remaining-head');
   paidBtn.addEventListener('click', navClicked);
   filterBar.addEventListener('keyup', filterList);
   dataTable.addEventListener('change', checkBoxCheck);
+})();
+
+// UPDATE FOOTER
+(function changeFooterYear() {
+  let date = new Date();
+  let year = date.getFullYear();
+  footerYear.innerHTML = year;
 })();
 
 
@@ -61,19 +69,23 @@ function paintSummaryTable(data) {
   let totalAmt = 0;
   let htmlToAdd = `
         <thead>
+          <th>Category</th>
           <th>Group</th>
           <th>Company</th>
           <th>Total Due</th>
           <th>Recommended to Pay</th>
+          <th>Approved to Pay</th>
           <th>Remaining Balance</th>
         </thead>`;
 
   data.forEach(company => {
     htmlToAdd += `
     <tr id="row-${company.company}" class="data-table-row">
+      <td class="company-category">${company.ap_group}</td>
       <td class="company-group">${company.company_group}</td>
       <td class="company">${company.company}</td>
       <td class="amount">${displayCurrency(company.amount)}</td>
+      <td>$0</td>
       <td>$0</td>
       <td>${displayCurrency(company.amount)}</td>
     </tr>`;
@@ -91,6 +103,7 @@ function paintTabTable(data) {
   dataTable.innerHTML = '';
   totalDue.innerHTML = '$0';
   let totalAmt = 0;
+  let amtToPay = 0;
   let htmlToAdd = `
     <thead>
       <th>Pay?</th>
@@ -103,6 +116,7 @@ function paintTabTable(data) {
       <th>Invoice Desc</th>
       <th>Bill.com</th>
       <th>Total Amt Due</th>
+      <th>Approved?</th>
     </thead>
     <tbody>
   `;
@@ -111,7 +125,7 @@ function paintTabTable(data) {
     htmlToAdd += `
       <tr id="${inv.recommended ? inv.objId : 'row-' + inv.unique_id}" class="data-table-row${inv.recommended ? ' recommended' : ''}">
         <td><input type="checkbox" class="recommend-check" id="rec-${inv.unique_id}"${inv.recommended ? ' checked' : ''}></td>
-        <td class="to-pay">$0</td>
+        <td class="to-pay">${inv.amtToPay ? displayCurrency(inv.amtToPay) : '$0'}</td>
         <td class="amt-remaining">${displayCurrency(inv.amount)}</td>
         <td>${inv.status}</td>
         <td>${inv.dueInDays < 0 ? 'N/A' : inv.dueInDays}</td>
@@ -120,15 +134,20 @@ function paintTabTable(data) {
         <td class ="description">${inv.invoice_num}</td>
         <td>${inv.bdcUrl ? '<a href="' + inv.bdcUrl + '" target="_blank">' + inv.unique_id + '</a>' : ''}</td>
         <td class="tot-amt">${displayCurrency(inv.amount)}</td>
+        <td class="approval-cell${inv.approved ? ' approved' : ''}">${inv.approved ? 'Approved' : ''}</td>
       </tr>
     `;
     totalAmt += inv.amount;
+    if(inv.amtToPay) {
+      amtToPay += inv.amtToPay;
+    };
   });
 
   htmlToAdd += `</tbody>`
   dataTable.innerHTML = htmlToAdd;
   totalDue.innerHTML = displayCurrency(totalAmt);
-  amtRemainingHead.innerHTML = displayCurrency(totalAmt);
+  amtToPayHead.innerHTML = displayCurrency(amtToPay);
+  amtRemainingHead.innerHTML = displayCurrency(totalAmt - amtToPay);
   endLoad();
 };
 
@@ -160,7 +179,7 @@ function navClicked(e) {
     }
   } else if(e.target.id === 'summary-link') {
     if(!e.target.classList.contains('selected')) {
-      getInitTableData(`/data/v1/accountsPayableData?sum=amount&groupby=company,company_group`);
+      getInitTableData(`/data/v1/accountsPayableData?sum=amount&groupby=company,company_group,ap_group`);
       filterBar.style.display = '';
     }
   } else if(e.target.id === 'paid-invoices-link') {
@@ -182,20 +201,24 @@ function filterList(e) {
   const text = e.target.value.toLowerCase();
   let company = '';
   let group = '';
+  let category = '';
   let newAmt = 0;
+  let amount = '';
 
   for (i = 1; i < tableRow.length; i++) {
     let row = tableRow[i];
 
     let compEl = row.getElementsByClassName('company');
     let groupEl = row.getElementsByClassName('company-group');
+    let categoryEl = row.getElementsByClassName('company-category');
     let amtEl = row.getElementsByClassName('amount');
 
     company = compEl.length !== 0 ? compEl[0].innerText : '';
     group = groupEl.length !== 0 ? groupEl[0].innerText : '';
+    category = categoryEl.length !== 0 ? categoryEl[0].innerText : '';
     amount = amtEl.length !==0 ? amtEl[0].innerText : '';
 
-    if(company.toLowerCase().indexOf(text) !== -1 || group.toLowerCase().indexOf(text) !== -1) {
+    if(company.toLowerCase().indexOf(text) !== -1 || group.toLowerCase().indexOf(text) !== -1 || category.toLowerCase().indexOf(text) !== -1) {
       row.style.display = '';
       newAmt += parseFloat(amount.replace(/[$,]+/g,""));
     } else {
