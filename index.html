@@ -25,11 +25,15 @@
   <div class="container">
     <h2 class ="mt-1" id="total-header">Total Amount Due: <span id="total-amt-due">$0</span></h2>
     <h2 class ="mt-1" id="amt-to-pay-header">Amount to Pay: <span class="negative-num" id="amt-to-pay-head">$0</span></h2>
-    <h2 class ="mt-1" id="amt-to-pay-header">Amount Remaining: <span class="warning-num" id="amt-remaining-head">$0</span></h2>
-    <div class="input-field mt-1">
+    <h2 class ="mt-1" id="amt-remaining-header">Amount Remaining: <span class="warning-num" id="amt-remaining-head">$0</span></h2>
+    <!-- <div class="input-field mt-1">
       <input type="text" name="filter" id="filter" placeholder="Type to search...">
-    </div>
+    </div> -->
+    <table id="summary-table" class="table-styles mt-3"></table>
     <table id="data-table" class="table-styles mt-3"></table>
+    <div id="top-btn-div">
+      <button id="topBtn">Top</button>
+    </div>
   </div>
 
   <footer>

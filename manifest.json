@@ -32,6 +32,7 @@
       "schema": { "columns": 
         [
           { "name": "ap_group", "type": "STRING" },
+          { "name": "company", "type": "STRING" },
           { "name": "unique_id", "type": "STRING" },
           { "name": "amt_to_pay", "type": "DECIMAL" },
           { "name": "total_inv_amt", "type": "DECIMAL" },

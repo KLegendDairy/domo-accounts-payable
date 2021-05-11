@@ -5,11 +5,13 @@ const devBtn = document.getElementById('dev-other-link');
 const paidBtn = document.getElementById('paid-invoices-link');
 const dataTable = document.getElementById('data-table');
 const totalDue = document.getElementById('total-amt-due');
-const filterBar = document.getElementById('filter');
+// const filterBar = document.getElementById('filter');
 const tableRow = dataTable.getElementsByTagName('tr');
 const amtToPayHead = document.getElementById('amt-to-pay-head');
 const amtRemainingHead = document.getElementById('amt-remaining-head');
 const footerYear = document.getElementById('year-foot');
+const summaryTable = document.getElementById('summary-table');
+const topBtn = document.getElementById('topBtn');
 
 // LOAD EVENT LISTENERS
 (function loadEventListeners() {
@@ -17,8 +19,9 @@ const footerYear = document.getElementById('year-foot');
   mgtBtn.addEventListener('click', navClicked);
   devBtn.addEventListener('click', navClicked);
   paidBtn.addEventListener('click', navClicked);
-  filterBar.addEventListener('keyup', filterList);
+  // filterBar.addEventListener('keyup', filterList);
   dataTable.addEventListener('change', checkBoxCheck);
+  topBtn.addEventListener('click', goToTop);
 })();
 
 // UPDATE FOOTER
@@ -29,7 +32,7 @@ const footerYear = document.getElementById('year-foot');
 })();
 
 
-// UTILITIES
+// ===================== UTILITIES =====================
 // FUNCTION TO FORMAT NUMBERS TO CURRENCY
 const formatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -55,18 +58,23 @@ function endLoad() {
     const container = document.querySelector('.container');
     container.style.display = '';
   }
-
   return false;
 };
 
+// FUNCTION TO ADD THOUSANDS SEPARATOR
+function formatNumber(num) {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
 
-// DATA TABLE ITEMS
+
+// ===================== DATA TABLE ITEMS =====================
 
 // PAINT SUMMARY TABLE
 function paintSummaryTable(data) {
+  document.getElementById('total-header').style.display = 'none';
+  document.getElementById('amt-to-pay-header').style.display = 'none';
+  document.getElementById('amt-remaining-header').style.display = 'none';
   dataTable.innerHTML = '';
-  totalDue.innerHTML = '$0';
-  let totalAmt = 0;
   let htmlToAdd = `
         <thead>
           <th>Category</th>
@@ -89,12 +97,9 @@ function paintSummaryTable(data) {
       <td>$0</td>
       <td>${displayCurrency(company.amount)}</td>
     </tr>`;
-    totalAmt += company.amount;
   });
 
   dataTable.innerHTML = htmlToAdd;
-  totalDue.innerHTML = displayCurrency(totalAmt);
-  amtRemainingHead.innerHTML = displayCurrency(totalAmt);
   endLoad();
 };
 
@@ -141,6 +146,9 @@ function paintTabTable(data) {
     if(inv.amtToPay) {
       amtToPay += inv.amtToPay;
     };
+    document.getElementById('total-header').style.display = '';
+    document.getElementById('amt-to-pay-header').style.display = '';
+    document.getElementById('amt-remaining-header').style.display = '';
   });
 
   htmlToAdd += `</tbody>`
@@ -151,8 +159,66 @@ function paintTabTable(data) {
   endLoad();
 };
 
+// FUNCTION TO DISPLAY SUMMARY TABLE
+function displaySummaryTab(data) {
+  summaryTable.innerHTML = '';
+  let htmlToAdd = `
+    <thead>
+      <th>Category</th>
+      <th>Invoices Due</th>
+      <th>Amount Due</th>
+      <th>Invoices Recommended</th>
+      <th>Amount Recommended</th>
+      <th>Invoices Approved</th>
+      <th>Amount Approved</th>
+    </thead>
+    <tbody>
+  `;
+  let inv = 0;
+  let amtDue = 0;
+  let invRec = 0;
+  let amtRec = 0;
 
-// NAVBAR ITEMS
+  data.forEach(item => {
+    htmlToAdd += `
+      <tr>
+        <td>${item.apGroup}</td>
+        <td>${formatNumber(item.invoicesDue)}</td>
+        <td>${displayCurrency(item.amountDue)}</td>
+        <td>${item.invoicesRecommended ? formatNumber(item.invoicesRecommended) : '0'}</td>
+        <td>${item.amountRecommended ? displayCurrency(item.amountRecommended) : '$0'}</td>
+        <td>0</td>
+        <td>$0</td>
+      </tr>
+    `;
+    inv += parseFloat(item.invoicesDue);
+    amtDue += parseFloat(item.amountDue);
+    if(item.invoicesRecommended) {
+      invRec += parseFloat(item.invoicesRecommended);
+    };
+    if(item.amountRecommended) {
+      amtRec += parseFloat(item.amountRecommended);
+    };
+  });
+
+  htmlToAdd += `
+    <tr>
+      <td>Total</td>
+      <td>${formatNumber(inv)}</td>
+      <td>${displayCurrency(amtDue)}</td>
+      <td>${formatNumber(invRec)}</td>
+      <td>${displayCurrency(amtRec)}</td>
+      <td>0</td>
+      <td>$0</td>
+    </tr>
+  </tbody>
+  `;
+  summaryTable.innerHTML = htmlToAdd;
+  endLoad();
+};
+
+
+// ===================== NAVBAR ITEMS =====================
 
 // REMOVE CLASSES
 function removeClass(className) {
@@ -170,17 +236,18 @@ function navClicked(e) {
   if(e.target.id === 'mgt-prop-link') {
     if(!e.target.classList.contains('selected')) {
       getTabTableData(`/data/v1/accountsPayableData?sum=amount&groupby=unique_id,company,vendor,billDate,dueDate,dueInDays,bdcUrl,onHold,ap_group,invoice_num&filter=ap_group in ["Mgt %26 Prop Co"]`);
-      filterBar.style.display = 'none';
+      // filterBar.style.display = 'none';
     }
   } else if(e.target.id === 'dev-other-link') {
     if(!e.target.classList.contains('selected')) {
       getTabTableData(`/data/v1/accountsPayableData?sum=amount&groupby=unique_id,company,vendor,billDate,dueDate,dueInDays,bdcUrl,onHold,ap_group,invoice_num&filter=ap_group in ["Fund, Dev %26 Other"]`);
-      filterBar.style.display = 'none';
+      // filterBar.style.display = 'none';
     }
   } else if(e.target.id === 'summary-link') {
     if(!e.target.classList.contains('selected')) {
+      getSummaryTableData(`/sql/v1/accountsPayableData`, `SELECT company_ap_group, COUNT(DISTINCT \`unique_id\`), SUM(\`Amount Left To Pay\`) FROM accountsPayableData GROUP BY company_ap_group`);
       getInitTableData(`/data/v1/accountsPayableData?sum=amount&groupby=company,company_group,ap_group`);
-      filterBar.style.display = '';
+      // filterBar.style.display = '';
     }
   } else if(e.target.id === 'paid-invoices-link') {
     if(!e.target.classList.contains('selected')) {
@@ -195,44 +262,44 @@ function navClicked(e) {
 };
 
 
-// FUNCTIONS FOR UI INTERACTIONS
+// ===================== FUNCTIONS FOR UI INTERACTIONS =====================
 // FILTER BAR
-function filterList(e) {
-  const text = e.target.value.toLowerCase();
-  let company = '';
-  let group = '';
-  let category = '';
-  let newAmt = 0;
-  let amount = '';
+// function filterList(e) {
+//   const text = e.target.value.toLowerCase();
+//   let company = '';
+//   let group = '';
+//   let category = '';
+//   let newAmt = 0;
+//   let amount = '';
 
-  for (i = 1; i < tableRow.length; i++) {
-    let row = tableRow[i];
+//   for (i = 1; i < tableRow.length; i++) {
+//     let row = tableRow[i];
 
-    let compEl = row.getElementsByClassName('company');
-    let groupEl = row.getElementsByClassName('company-group');
-    let categoryEl = row.getElementsByClassName('company-category');
-    let amtEl = row.getElementsByClassName('amount');
+//     let compEl = row.getElementsByClassName('company');
+//     let groupEl = row.getElementsByClassName('company-group');
+//     let categoryEl = row.getElementsByClassName('company-category');
+//     let amtEl = row.getElementsByClassName('amount');
 
-    company = compEl.length !== 0 ? compEl[0].innerText : '';
-    group = groupEl.length !== 0 ? groupEl[0].innerText : '';
-    category = categoryEl.length !== 0 ? categoryEl[0].innerText : '';
-    amount = amtEl.length !==0 ? amtEl[0].innerText : '';
+//     company = compEl.length !== 0 ? compEl[0].innerText : '';
+//     group = groupEl.length !== 0 ? groupEl[0].innerText : '';
+//     category = categoryEl.length !== 0 ? categoryEl[0].innerText : '';
+//     amount = amtEl.length !==0 ? amtEl[0].innerText : '';
 
-    if(company.toLowerCase().indexOf(text) !== -1 || group.toLowerCase().indexOf(text) !== -1 || category.toLowerCase().indexOf(text) !== -1) {
-      row.style.display = '';
-      newAmt += parseFloat(amount.replace(/[$,]+/g,""));
-    } else {
-      row.style.display = 'none';
-    };
-  };
+//     if(company.toLowerCase().indexOf(text) !== -1 || group.toLowerCase().indexOf(text) !== -1 || category.toLowerCase().indexOf(text) !== -1) {
+//       row.style.display = '';
+//       newAmt += parseFloat(amount.replace(/[$,]+/g,""));
+//     } else {
+//       row.style.display = 'none';
+//     };
+//   };
 
-  let newRemaining = newAmt - parseFloat(amtToPayHead.innerText.replace(/[$,]+/g,""))
+//   let newRemaining = newAmt - parseFloat(amtToPayHead.innerText.replace(/[$,]+/g,""))
 
-  totalDue.innerHTML = displayCurrency(newAmt);
-  amtRemainingHead.innerHTML = displayCurrency(newRemaining);
+//   totalDue.innerHTML = displayCurrency(newAmt);
+//   amtRemainingHead.innerHTML = displayCurrency(newRemaining);
 
-  e.preventDefault();
-};
+//   e.preventDefault();
+// };
 
 // CHECKING OF CHECKBOXES
 function checkBoxCheck(e) {
@@ -265,8 +332,10 @@ function checkBoxCheck(e) {
         const totalInvAmt = parseFloat(amt.innerText.replace(/[$,]+/g,""));
         const rightNow = new Date();
         const recForPmtTimestamp = rightNow.toISOString();
+        const company = compGroup.innerText;
         const invoiceData = {
           ap_group: apGroup,
+          company: company,
           unique_id: uniqueId,
           amt_to_pay: amtToPay,
           total_inv_amt: totalInvAmt,
@@ -302,6 +371,24 @@ function checkBoxCheck(e) {
       };
     };
   };
+
+  e.preventDefault();
+};
+
+// GO BACK TO TOP BUTTON AND SCROLL FUNCTION 
+window.onscroll = function() { scrollFunction() };
+
+function scrollFunction() {
+  if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+    topBtn.style.display = 'block';
+  } else {
+    topBtn.style.display = 'none';
+  };
+};
+
+function goToTop(e) {
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
 
   e.preventDefault();
 };

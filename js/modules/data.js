@@ -75,8 +75,10 @@ function getTabTableData(query) {
               });
               obj.forEach(item => {
                 index = responseData.findIndex(inv => inv.unique_id == item.id);
-                responseData[index].objId = item.objId;
-                responseData[index].amtToPay = item.amtToPay;
+                if(index !== -1) {
+                  responseData[index].objId = item.objId;
+                  responseData[index].amtToPay = item.amtToPay;
+                };
               });
               paintTabTable(responseData);
             })
@@ -100,12 +102,46 @@ function getTabTableData(query) {
   
 };
 
+// GET SUMMARY DATA TABLE DATA
+function getSummaryTableData(url, query) {
+  startLoad();
+  let resData = [];
+  domo.post(url, query, { contentType: 'text/plain' })
+    .then(data => {
+      data.rows.forEach(item => {
+        resData.push({
+          apGroup: item[0],
+          invoicesDue: item[1],
+          amountDue: item[2]
+        });
+      });
+    domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.ap_group&count=documentCount&sum=content.amt_to_pay`,{})
+      .then(data => {
+        data.forEach(group => {
+          let i = resData.findIndex(item => item.apGroup === group._id);
+          if(i !== -1) {
+            resData[i].invoicesRecommended = group.documentCount;
+            resData[i].amountRecommended = group.amt_to_pay;
+          };
+        });
+        displaySummaryTab(resData);
+      });
+    })
+    .catch(err => console.log(err));
+};
+
+
+
+
+// ============== SAVE AND DELETE FROM COLLECTIONS ================
+
 // SAVE RECOMMENDED TO COLLECTION
 function saveInvoiceToDatabase(invoice, target) {
   // startLoad();
   domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/`, {
     "content": {
       unique_id: invoice.unique_id,
+      company: invoice.company,
       ap_group: invoice.ap_group,
       amt_to_pay: invoice.amt_to_pay,
       total_inv_amt: invoice.total_inv_amt,
