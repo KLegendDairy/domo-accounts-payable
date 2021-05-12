@@ -12,10 +12,10 @@
     <div class="nav-container">
       <h1 class="title">Accounts Payable Approval App</h1>
       <ul class="main-nav">
-        <li><a href="#" class="tab-link btn selected" id="summary-link">Summary</a></li>
-        <li><a href="#" class="tab-link btn" id="mgt-prop-link">Mgt & Prop Co</a></li>
-        <li><a href="#" class="tab-link btn" id="dev-other-link">Dev & Other Co</a></li>
-        <li><a href="#" class="tab-link btn" id="paid-invoices-link">Paid Invoices</a></li>
+        <li><a href="#" class="tab-link btn btn-primary selected" id="summary-link">Summary</a></li>
+        <li><a href="#" class="tab-link btn btn-primary" id="mgt-prop-link">Mgt & Prop Co</a></li>
+        <li><a href="#" class="tab-link btn btn-primary" id="dev-other-link">Dev & Other Co</a></li>
+        <li><a href="#" class="tab-link btn btn-primary" id="paid-invoices-link">Paid Invoices</a></li>
       </ul>
     </div>
   </nav>
@@ -23,13 +23,17 @@
   <img id="spinner" src="./img/loading.gif" alt="">
 
   <div class="container">
-    <h2 class ="mt-1" id="total-header">Total Amount Due: <span id="total-amt-due">$0</span></h2>
+    <!-- <h2 class ="mt-1" id="total-header">Total Amount Due: <span id="total-amt-due">$0</span></h2>
     <h2 class ="mt-1" id="amt-to-pay-header">Amount to Pay: <span class="negative-num" id="amt-to-pay-head">$0</span></h2>
-    <h2 class ="mt-1" id="amt-remaining-header">Amount Remaining: <span class="warning-num" id="amt-remaining-head">$0</span></h2>
-    <!-- <div class="input-field mt-1">
-      <input type="text" name="filter" id="filter" placeholder="Type to search...">
-    </div> -->
+    <h2 class ="mt-1" id="amt-remaining-header">Amount Remaining: <span class="warning-num" id="amt-remaining-head">$0</span></h2> -->
     <table id="summary-table" class="table-styles mt-3"></table>
+    <div class="input-field mt-1">
+      <div class="filter-bar-container">
+        <input type="text" name="filter" id="filter" placeholder="Type to search...">
+        <a href="#" class="btn btn-dark" id="searchBtn">Filter</a>
+      </div>
+      <a href="#" class="btn btn-dark" id="hide-summary">Hide Summary</a>
+    </div>
     <table id="data-table" class="table-styles mt-3"></table>
     <div id="top-btn-div">
       <button id="topBtn">Top</button>

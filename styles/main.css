@@ -52,14 +52,26 @@ a {
 
 .btn {
   display: inline-block;
-  border-bottom: 1px solid transparent;
-  color: #fff;
   padding: 0.3rem 1.5rem 0.5rem 1.5rem;
   border-radius: 3px;
 }
 
-.btn:hover {
+.btn-primary {
+  color: #fff;
+  border-bottom: 1px solid transparent;
+}
+
+.btn-primary:hover {
   border-bottom: 1px solid #fff;
+}
+
+.btn-dark {
+  background: #333;
+  color: #fff;
+}
+
+.btn-dark:hover {
+  background: coral;
 }
 
 .selected {
@@ -123,8 +135,7 @@ a {
   border-radius: 0;
   outline: none;
   height: 3rem;
-  width: 50%;
-  min-width: 300px;
+  width: 75%;
   font-size: 16px;
   margin: 0 0 8px 0;
   padding: 0 0 0 8px;
@@ -134,12 +145,39 @@ a {
   border-bottom: 1px solid coral;
 }
 
+.input-field {
+  width: 90%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  align-content: flex-start;
+}
+
+#hide-summary {
+  height: auto;
+}
+
+.filter-bar-container {
+  display: flex;
+  width: 30%;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  align-content: flex-start;
+}
+
+.filter-bar-container > .btn {
+  height: auto;
+}
+
 /* DATA TABLE */
 .table-styles {
   border-collapse: collapse;
   width: 90%;
   border: 1px solid #ddd;
   margin: 1.5rem;
+  border-radius: 3px;
 }
 
 .table-styles th {
@@ -181,11 +219,16 @@ thead th:first-child {
   background: #43a75a !important;
 }
 
-#summary-table tbody tr:last-child {
+.total-row {
   background: #333;
   color: #fff;
   font-weight: bold;
   font-style: italic;
+}
+
+.total-row:hover {
+  background: #3f3f3f !important;
+  color: #fff !important;
 }
 
 /* TOP BUTTON */

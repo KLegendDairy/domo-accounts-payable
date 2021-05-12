@@ -4,14 +4,15 @@ const mgtBtn = document.getElementById('mgt-prop-link');
 const devBtn = document.getElementById('dev-other-link');
 const paidBtn = document.getElementById('paid-invoices-link');
 const dataTable = document.getElementById('data-table');
-const totalDue = document.getElementById('total-amt-due');
+// const totalDue = document.getElementById('total-amt-due');
 // const filterBar = document.getElementById('filter');
 const tableRow = dataTable.getElementsByTagName('tr');
-const amtToPayHead = document.getElementById('amt-to-pay-head');
-const amtRemainingHead = document.getElementById('amt-remaining-head');
+// const amtToPayHead = document.getElementById('amt-to-pay-head');
+// const amtRemainingHead = document.getElementById('amt-remaining-head');
 const footerYear = document.getElementById('year-foot');
 const summaryTable = document.getElementById('summary-table');
 const topBtn = document.getElementById('topBtn');
+const sumBtn = document.getElementById('hide-summary');
 
 // LOAD EVENT LISTENERS
 (function loadEventListeners() {
@@ -22,6 +23,7 @@ const topBtn = document.getElementById('topBtn');
   // filterBar.addEventListener('keyup', filterList);
   dataTable.addEventListener('change', checkBoxCheck);
   topBtn.addEventListener('click', goToTop);
+  sumBtn.addEventListener('click', hideSummary);
 })();
 
 // UPDATE FOOTER
@@ -33,6 +35,9 @@ const topBtn = document.getElementById('topBtn');
 
 
 // ===================== UTILITIES =====================
+// UTILITY VAR
+let spins = 0;
+
 // FUNCTION TO FORMAT NUMBERS TO CURRENCY
 const formatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -45,6 +50,7 @@ function displayCurrency(num) {
 
 // FUNCTIONS TO CONTROL LOADING OF SCREEN
 function startLoad() {
+  spins ++;
   const container = document.querySelector('.container');
   container.style.display = 'none';
   const spinner = document.getElementById('spinner');
@@ -54,10 +60,13 @@ function startLoad() {
 function endLoad() {
   const spinner = document.getElementById('spinner');
   if (spinner) {
-    spinner.style.display = 'none';
-    const container = document.querySelector('.container');
-    container.style.display = '';
-  }
+    spins --;
+    if(spins === 0) {
+      spinner.style.display = 'none';
+      const container = document.querySelector('.container');
+      container.style.display = '';
+    };
+  };
   return false;
 };
 
@@ -71,34 +80,72 @@ function formatNumber(num) {
 
 // PAINT SUMMARY TABLE
 function paintSummaryTable(data) {
-  document.getElementById('total-header').style.display = 'none';
-  document.getElementById('amt-to-pay-header').style.display = 'none';
-  document.getElementById('amt-remaining-header').style.display = 'none';
+  // document.getElementById('total-header').style.display = 'none';
+  // document.getElementById('amt-to-pay-header').style.display = 'none';
+  // document.getElementById('amt-remaining-header').style.display = 'none';
   dataTable.innerHTML = '';
+  let totComp = data.length;
+  let invDue = 0;
+  let amtDue = 0;
+  let invToPay = 0;
+  let amtToPay = 0;
   let htmlToAdd = `
         <thead>
           <th>Category</th>
           <th>Group</th>
           <th>Company</th>
-          <th>Total Due</th>
-          <th>Recommended to Pay</th>
-          <th>Approved to Pay</th>
-          <th>Remaining Balance</th>
-        </thead>`;
+          <th>Total Inv Due</th>
+          <th>Total Amt Due</th>
+          <th>Inv Recommended</th>
+          <th>Amt Recommended</th>
+          <th>Inv Approved</th>
+          <th>Amt Approved</th>
+          <th>Inv Remaining</th>
+          <th>Amt Remaining</th>
+        </thead>
+        <tbody>`;
 
   data.forEach(company => {
     htmlToAdd += `
-    <tr id="row-${company.company}" class="data-table-row">
+    <tr id="row-${company.company}" class="data-table-row${company.invToPay ? ' recommended' : ''}">
       <td class="company-category">${company.ap_group}</td>
       <td class="company-group">${company.company_group}</td>
       <td class="company">${company.company}</td>
-      <td class="amount">${displayCurrency(company.amount)}</td>
-      <td>$0</td>
-      <td>$0</td>
-      <td>${displayCurrency(company.amount)}</td>
+      <td class="inv-due">${formatNumber(company.unique_id)}</td>
+      <td class="amt-due">${displayCurrency(company.amount)}</td>
+      <td class="inv-rec">${company.invToPay ? formatNumber(company.invToPay) : '0'}</td>
+      <td class="amt-rec">${company.recForPmt ? displayCurrency(company.recForPmt) : '$0'}</td>
+      <td class="inv-apr">0</td>
+      <td class="amt-apr">$0</td>
+      <td class="inv-rem">${company.invToPay ? formatNumber(company.unique_id - company.invToPay) : formatNumber(company.unique_id)}</td>
+      <td class="amt-rem">${company.recForPmt ? displayCurrency(company.amount - company.recForPmt) : displayCurrency(company.amount)}</td>
     </tr>`;
+    invDue += company.unique_id;
+    amtDue += company.amount;
+    if(company.invToPay) {
+      invToPay += company.invToPay;
+    };
+    if(company.recForPmt) {
+      amtToPay += company.recForPmt;
+    };
   });
 
+  htmlToAdd += `
+      <tr class="total-row">
+        <td class="company-category">Total</td>
+        <td class="company-group">${totComp}</td>
+        <td class="company">${totComp}</td>
+        <td class="tot-inv-due">${formatNumber(invDue)}</td>
+        <td class="tot-amt-due">${displayCurrency(amtDue)}</td>
+        <td class="tot-inv-rec">${formatNumber(invToPay)}</td>
+        <td class="tot-amt-rec">${displayCurrency(amtToPay)}</td>
+        <td class="tot-inv-apr">0</td>
+        <td class="tot-amt-apr">$0</td>
+        <td class="tot-inv-rem">${formatNumber(invDue - invToPay)}</td>
+        <td class="tot-amt-rem">${displayCurrency(Math.round(amtDue) - Math.round(amtToPay))}</td>
+      </tr>
+    </tbody>
+  `;
   dataTable.innerHTML = htmlToAdd;
   endLoad();
 };
@@ -106,9 +153,9 @@ function paintSummaryTable(data) {
 // PAINT MGT TABLE
 function paintTabTable(data) {
   dataTable.innerHTML = '';
-  totalDue.innerHTML = '$0';
-  let totalAmt = 0;
-  let amtToPay = 0;
+  // totalDue.innerHTML = '$0';
+  // let totalAmt = 0;
+  // let amtToPay = 0;
   let htmlToAdd = `
     <thead>
       <th>Pay?</th>
@@ -131,7 +178,7 @@ function paintTabTable(data) {
       <tr id="${inv.recommended ? inv.objId : 'row-' + inv.unique_id}" class="data-table-row${inv.recommended ? ' recommended' : ''}">
         <td><input type="checkbox" class="recommend-check" id="rec-${inv.unique_id}"${inv.recommended ? ' checked' : ''}></td>
         <td class="to-pay">${inv.amtToPay ? displayCurrency(inv.amtToPay) : '$0'}</td>
-        <td class="amt-remaining">${displayCurrency(inv.amount)}</td>
+        <td class="amt-remaining">${inv.recommended ? displayCurrency(Math.round(inv.amount) - Math.round(inv.amtToPay)) : displayCurrency(inv.amount)}</td>
         <td>${inv.status}</td>
         <td>${inv.dueInDays < 0 ? 'N/A' : inv.dueInDays}</td>
         <td class="company" id="${inv.ap_group}">${inv.company}</td>
@@ -142,20 +189,20 @@ function paintTabTable(data) {
         <td class="approval-cell${inv.approved ? ' approved' : ''}">${inv.approved ? 'Approved' : ''}</td>
       </tr>
     `;
-    totalAmt += inv.amount;
-    if(inv.amtToPay) {
-      amtToPay += inv.amtToPay;
-    };
-    document.getElementById('total-header').style.display = '';
-    document.getElementById('amt-to-pay-header').style.display = '';
-    document.getElementById('amt-remaining-header').style.display = '';
+    // totalAmt += inv.amount;
+    // if(inv.amtToPay) {
+    //   amtToPay += inv.amtToPay;
+    // };
+    // document.getElementById('total-header').style.display = '';
+    // document.getElementById('amt-to-pay-header').style.display = '';
+    // document.getElementById('amt-remaining-header').style.display = '';
   });
 
   htmlToAdd += `</tbody>`
   dataTable.innerHTML = htmlToAdd;
-  totalDue.innerHTML = displayCurrency(totalAmt);
-  amtToPayHead.innerHTML = displayCurrency(amtToPay);
-  amtRemainingHead.innerHTML = displayCurrency(totalAmt - amtToPay);
+  // totalDue.innerHTML = displayCurrency(totalAmt);
+  // amtToPayHead.innerHTML = displayCurrency(amtToPay);
+  // amtRemainingHead.innerHTML = displayCurrency(totalAmt - amtToPay);
   endLoad();
 };
 
@@ -171,6 +218,8 @@ function displaySummaryTab(data) {
       <th>Amount Recommended</th>
       <th>Invoices Approved</th>
       <th>Amount Approved</th>
+      <th>Invoices Remaining</th>
+      <th>Amount Remaining</th>
     </thead>
     <tbody>
   `;
@@ -189,6 +238,8 @@ function displaySummaryTab(data) {
         <td>${item.amountRecommended ? displayCurrency(item.amountRecommended) : '$0'}</td>
         <td>0</td>
         <td>$0</td>
+        <td>0</td>
+        <td>$0</td>
       </tr>
     `;
     inv += parseFloat(item.invoicesDue);
@@ -202,12 +253,79 @@ function displaySummaryTab(data) {
   });
 
   htmlToAdd += `
-    <tr>
+    <tr class="total-row">
       <td>Total</td>
       <td>${formatNumber(inv)}</td>
       <td>${displayCurrency(amtDue)}</td>
       <td>${formatNumber(invRec)}</td>
       <td>${displayCurrency(amtRec)}</td>
+      <td>0</td>
+      <td>$0</td>
+      <td>0</td>
+      <td>$0</td>
+    </tr>
+  </tbody>
+  `;
+  summaryTable.innerHTML = htmlToAdd;
+  endLoad();
+};
+
+
+// FUNCTION TO DISPLAY SUMMARY TABLE - DETAIL PAGES
+function displaySummaryTabDetail(data) {
+  summaryTable.innerHTML = '';
+  let htmlToAdd = `
+    <thead>
+      <th>Company</th>
+      <th>Invoices Due</th>
+      <th>Amount Due</th>
+      <th>Invoices Recommended</th>
+      <th>Amount Recommended</th>
+      <th>Invoices Approved</th>
+      <th>Amount Approved</th>
+      <th>Invoices Remaining</th>
+      <th>Amount Remaining</th>
+    </thead>
+    <tbody>
+  `;
+  let inv = 0;
+  let amtDue = 0;
+  let invRec = 0;
+  let amtRec = 0;
+
+  data.forEach(item => {
+    htmlToAdd += `
+      <tr>
+        <td>${item.company}</td>
+        <td>${formatNumber(item.unique_id)}</td>
+        <td>${displayCurrency(item.amount)}</td>
+        <td>${item.invoicesRecommended ? formatNumber(item.invoicesRecommended) : '0'}</td>
+        <td>${item.amountRecommended ? displayCurrency(item.amountRecommended) : '$0'}</td>
+        <td>0</td>
+        <td>$0</td>
+        <td>0</td>
+        <td>$0</td>
+      </tr>
+    `;
+    inv += parseFloat(item.unique_id);
+    amtDue += parseFloat(item.amount);
+    if(item.invoicesRecommended) {
+      invRec += parseFloat(item.invoicesRecommended);
+    };
+    if(item.amountRecommended) {
+      amtRec += parseFloat(item.amountRecommended);
+    };
+  });
+
+  htmlToAdd += `
+    <tr class="total-row">
+      <td>Total</td>
+      <td>${formatNumber(inv)}</td>
+      <td>${displayCurrency(amtDue)}</td>
+      <td>${formatNumber(invRec)}</td>
+      <td>${displayCurrency(amtRec)}</td>
+      <td>0</td>
+      <td>$0</td>
       <td>0</td>
       <td>$0</td>
     </tr>
@@ -236,6 +354,7 @@ function navClicked(e) {
   if(e.target.id === 'mgt-prop-link') {
     if(!e.target.classList.contains('selected')) {
       getTabTableData(`/data/v1/accountsPayableData?sum=amount&groupby=unique_id,company,vendor,billDate,dueDate,dueInDays,bdcUrl,onHold,ap_group,invoice_num&filter=ap_group in ["Mgt %26 Prop Co"]`);
+      getSummaryTableDetailData(`/data/v1/accountsPayableData?sum=amount&unique=unique_id&groupby=company&fields=company,amount,unique_id&filter=ap_group in ["Mgt %26 Prop Co"]`)
       // filterBar.style.display = 'none';
     }
   } else if(e.target.id === 'dev-other-link') {
@@ -317,14 +436,14 @@ function checkBoxCheck(e) {
         amtRemaining.innerHTML = '$0';
         
         const payHead = parseFloat(pay.innerText.replace(/[$,]+/g,""));
-        const currentPayHead = parseFloat(amtToPayHead.innerText.replace(/[$,]+/g,""));
-        const newAmtToPay = payHead + currentPayHead
-        amtToPayHead.innerHTML = displayCurrency(newAmtToPay);
+        // const currentPayHead = parseFloat(amtToPayHead.innerText.replace(/[$,]+/g,""));
+        // const newAmtToPay = payHead + currentPayHead
+        // amtToPayHead.innerHTML = displayCurrency(newAmtToPay);
 
-        const currentTotal = parseFloat(totalDue.innerText.replace(/[$,]+/g,""));
-        const newRemaining = currentTotal - newAmtToPay;
+        // const currentTotal = parseFloat(totalDue.innerText.replace(/[$,]+/g,""));
+        // const newRemaining = currentTotal - newAmtToPay;
 
-        amtRemainingHead.innerHTML = displayCurrency(newRemaining);
+        // amtRemainingHead.innerHTML = displayCurrency(newRemaining);
 
         const apGroup = compGroup.id;
         const uniqueId = recordId.substring(4);
@@ -340,28 +459,28 @@ function checkBoxCheck(e) {
           amt_to_pay: amtToPay,
           total_inv_amt: totalInvAmt,
           rec_for_pmt_timestamp: recForPmtTimestamp
-        }
+        };
 
         saveInvoiceToDatabase(invoiceData, `row-${uniqueId}`);
       };
     } else {
       if(e.target.parentElement.parentElement.classList.contains('recommended')) {
         e.target.parentElement.parentElement.classList.remove('recommended');
-        let pay = e.target.parentElement.parentElement.getElementsByClassName('to-pay')[0];
-        let amt = e.target.parentElement.parentElement.getElementsByClassName('tot-amt')[0];
-        let amtRemaining = e.target.parentElement.parentElement.getElementsByClassName('amt-remaining')[0];
-        let recordId = e.target.parentElement.parentElement.id;
-        let id = e.target.id;
+        const pay = e.target.parentElement.parentElement.getElementsByClassName('to-pay')[0];
+        const amt = e.target.parentElement.parentElement.getElementsByClassName('tot-amt')[0];
+        const amtRemaining = e.target.parentElement.parentElement.getElementsByClassName('amt-remaining')[0];
+        const recordId = e.target.parentElement.parentElement.id;
+        const id = e.target.id;
 
         const payHead = parseFloat(pay.innerText.replace(/[$,]+/g,""));
-        const currentPayHead = parseFloat(amtToPayHead.innerText.replace(/[$,]+/g,""));
-        const newAmtToPay = currentPayHead - payHead
-        amtToPayHead.innerHTML = displayCurrency(newAmtToPay);
+        // const currentPayHead = parseFloat(amtToPayHead.innerText.replace(/[$,]+/g,""));
+        // const newAmtToPay = currentPayHead - payHead
+        // amtToPayHead.innerHTML = displayCurrency(newAmtToPay);
 
-        const currentTotal = parseFloat(totalDue.innerText.replace(/[$,]+/g,""));
-        const newRemaining = currentTotal - newAmtToPay;
+        // const currentTotal = parseFloat(totalDue.innerText.replace(/[$,]+/g,""));
+        // const newRemaining = currentTotal - newAmtToPay;
 
-        amtRemainingHead.innerHTML = displayCurrency(newRemaining);
+        // amtRemainingHead.innerHTML = displayCurrency(newRemaining);
 
         pay.innerHTML = '$0';
         amtRemaining.innerHTML = amt.innerText;
@@ -373,6 +492,19 @@ function checkBoxCheck(e) {
   };
 
   e.preventDefault();
+};
+
+// HIDE SUMMARY TABLE
+function hideSummary(e) {
+  if(summaryTable.style.display !== 'none') {
+    summaryTable.style.display = 'none';
+    sumBtn.innerHTML = 'Show Summary';
+  } else {
+    summaryTable.style.display = '';
+    sumBtn.innerHTML = 'Hide Summary';
+  };
+  
+  e.preventDefault()
 };
 
 // GO BACK TO TOP BUTTON AND SCROLL FUNCTION 

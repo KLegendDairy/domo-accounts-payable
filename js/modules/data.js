@@ -8,10 +8,25 @@ function getInitTableData(query) {
   startLoad();
   domo.get(query)
     .then(data => {
+      let resData = [];
       data.sort((a,b) => {
         return b.amount - a.amount
       });
-      paintSummaryTable(data);
+      data.forEach(item => {
+        resData.push(item);
+      });
+      domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.company&count=documentCount&sum=content.amt_to_pay`,{})
+        .then(appData => {
+          appData.forEach(inv => {
+            let i = resData.findIndex(item => item.company === inv._id);
+            if(i !== -1) {
+              resData[i].recForPmt = inv.amt_to_pay;
+              resData[i].invToPay = inv.documentCount;
+            };
+          });
+          paintSummaryTable(resData);
+        })
+        .catch(err => console.log(err));
     })
     .catch(err => console.log(err));
 };
@@ -126,6 +141,27 @@ function getSummaryTableData(url, query) {
         });
         displaySummaryTab(resData);
       });
+    })
+    .catch(err => console.log(err));
+};
+
+// GET SUMMARY TABLE DATA FOR THE DETAIL PAGES
+function getSummaryTableDetailData(query) {
+  domo.get(query)
+    .then(data => {
+      let resData = [];
+      data.sort((a,b) => {
+        return b.amount - a.amount;
+      });
+      data.forEach(inv => {
+        resData.push(inv);
+      });
+      domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.company&count=documentCount&sum=content.amt_to_pay`,{})
+        .then(data => {
+          console.log(data);
+          displaySummaryTabDetail(resData);
+        })
+        .catch(err => console.log(err));
     })
     .catch(err => console.log(err));
 };
