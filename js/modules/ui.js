@@ -11,6 +11,11 @@ const summaryTable = document.getElementById('summary-table');
 const topBtn = document.getElementById('topBtn');
 const sumBtn = document.getElementById('hide-summary');
 const approveBtn = document.getElementById('approveBtn');
+const modal = document.getElementById('modal-div');
+const modalText = document.getElementById('modal-text');
+const modalBtnText = document.getElementById('modal-btn-txt');
+const modalBtn = document.querySelector('.modal-btn');
+const closeModal = document.getElementById('close-modal');
 
 // LOAD EVENT LISTENERS
 (function loadEventListeners() {
@@ -23,6 +28,8 @@ const approveBtn = document.getElementById('approveBtn');
   topBtn.addEventListener('click', goToTop);
   sumBtn.addEventListener('click', toggleSummary);
   approveBtn.addEventListener('click', approveInvoices);
+  modalBtn.addEventListener('click', modalBtnClick);
+  closeModal.addEventListener('click', hideModal);
 })();
 
 
@@ -388,6 +395,8 @@ function paintTabTable(data) {
   `;
 
   data.forEach(inv => {
+    let aprDate = '';
+    inv.approval ? aprDate = new Date(inv.approval) : '';
     htmlToAdd += `
       <tr id="${inv.recommended ? inv.objId : 'row-' + inv.unique_id}" class="data-table-row${inv.recommended ? ' recommended' : ''}">
         <td><input type="checkbox" class="recommend-check" id="rec-${inv.unique_id}"${inv.recommended ? ' checked' : ''}></td>
@@ -400,7 +409,7 @@ function paintTabTable(data) {
         <td class ="description">${inv.invoice_num}</td>
         <td>${inv.bdcUrl ? '<a href="' + inv.bdcUrl + '" target="_blank">' + inv.unique_id + '</a>' : ''}</td>
         <td class="tot-amt">${displayCurrency(inv.amount)}</td>
-        <td class="approval-cell${inv.approved ? ' approved' : ''}">${inv.approved ? 'Approved' : ''}</td>
+        <td class="approval-cell${inv.approval ? ' approved' : ''}">${inv.approval ? aprDate.getMonth() + '/' + aprDate.getDay() + '/' + aprDate.getFullYear() : ''}</td>
       </tr>
     `;
   });
@@ -415,12 +424,10 @@ function paintTabTable(data) {
 
 // FUNCTION TO APPROVE ALL INVOICES
 function approveInvoices(e) {
-  let apr = confirm('You are going to mark all recommended invoices as approved.\nAre you sure you want to continue?')
-  if(apr) {
-    approveAllInvoices();
-  } else {
-    alert('No invoices approved');
-  };
+  const modTxt = 'You are about to approve all recommended invoices. Are you sure you want to proceed?'
+  const btTxt = 'Yes'
+  const bId = 'approve'
+  showModal(modTxt, btTxt, bId);
 
   e.preventDefault();
 };
@@ -650,6 +657,33 @@ function showSummary() {
   summaryTable.style.display = '';
   sumBtn.innerHTML = 'Hide Summary';
 }
+
+// HIDE AND SHOW MODAL FUNCTIONS
+function showModal(text, btnText, btnId) {
+  modalBtnText.innerHTML = btnText;
+  modalText.innerHTML = text;
+  modalBtn.id = btnId;
+
+  modal.style.display = 'block';
+};
+
+function hideModal(e) {
+  modal.style.display = 'none';
+
+  if(e) {
+    e.preventDefault();
+  };
+};
+
+function modalBtnClick(e) {
+  if(e.target.id === 'approve') {
+    approveAllInvoices();
+  };
+
+  hideModal();
+
+  e.preventDefault();
+};
 
 // GO BACK TO TOP BUTTON AND SCROLL FUNCTION 
 window.onscroll = function() { scrollFunction() };

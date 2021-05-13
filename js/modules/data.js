@@ -99,14 +99,17 @@ function getTabTableData(query) {
       let obj = [];
       let responseData = [];
       appData.forEach(inv => {
-        id = inv.content.unique_id.toString();
-        objId = inv.id;
-        amtToPay = inv.content.amt_to_pay;
+        const id = inv.content.unique_id.toString();
+        const objId = inv.id;
+        const amtToPay = inv.content.amt_to_pay;
+        const approval = inv.content.approval_timestamp ? inv.content.approval_timestamp : '';
+
         db.push(id);
         obj.push({
           id,
           objId,
-          amtToPay
+          amtToPay,
+          approval
         });
       })
       
@@ -149,6 +152,7 @@ function getTabTableData(query) {
                 if(index !== -1) {
                   responseData[index].objId = item.objId;
                   responseData[index].amtToPay = item.amtToPay;
+                  responseData[index].approval = item.approval;
                 };
               });
               paintTabTable(responseData);
@@ -222,7 +226,10 @@ function approveAllInvoices() {
       domo.put(`/domo/datastores/v1/collections/ap-app-data/documents/bulk`, reqBody)
         .then(data => {
           endLoad();
-          alert(data.Updated + ' Invoices Approved Successfully.');
+          const mTxt = `${data.Updated} invoices are approved!`
+          const bTxt = 'Okay'
+          const bId = 'close'
+          showModal(mTxt, bTxt, bId);
         })
         .catch(err => console.log(err));
       })
