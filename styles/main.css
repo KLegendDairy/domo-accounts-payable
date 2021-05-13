@@ -227,7 +227,7 @@ thead th:first-child {
 }
 
 .total-row:hover {
-  background: #3f3f3f !important;
+  background: coral !important;
   color: #fff !important;
 }
 
