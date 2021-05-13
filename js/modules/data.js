@@ -33,7 +33,6 @@ function getSummaryTableData(url, query) {
 
 // GET DATA
 function getInitTableData(query) {
-  // Add loading function here
   startLoad();
   domo.get(query)
     .then(data => {
@@ -172,8 +171,7 @@ function getTabTableData(query) {
 // ============== SAVE, DELETE AND UPDATE FROM COLLECTIONS ================
 
 // SAVE RECOMMENDED TO COLLECTION
-function saveInvoiceToDatabase(invoice, target) {
-  // startLoad();
+function saveInvoiceToDatabase(invoice, target, e) {
   domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/`, {
     "content": {
       unique_id: invoice.unique_id,
@@ -187,22 +185,46 @@ function saveInvoiceToDatabase(invoice, target) {
     .then(
       data => {
       document.getElementById(target).id = data.id;
-      // endLoad();
+      toggleCheckbox(e);
     })
-    .catch(err => {
-      console.log(err);
-      // createAlert('Error saving invoice to database. Please uncheck and try again', 'warning-alert')
-    });
+    .catch(err => console.log(err));
 };
 
 // REMOVE RECOMMENDED FROM COLLECTION
-function deleteInvoiceFromDatabase(target, id) {
-  // startLoad();
+function deleteInvoiceFromDatabase(target, id, e) {
   domo.delete(`domo/datastores/v1/collections/ap-app-data/documents/${target}`)
     .then(data => {
       document.getElementById(target).id = `row-${id}`;
-      // console.log(data);
-      // endLoad();
+      toggleCheckbox(e);
     })
     .catch(err => console.log(err));
+};
+
+
+// ============== APPROVE ALL INVOICES ================
+function approveAllInvoices() {
+  startLoad();
+  domo.get(`/domo/datastores/v1/collections/ap-app-data/documents/`)
+    .then(data => {
+      const reqBody = [];
+      data.forEach(inv => {
+        // Create empty object
+        const obj = {};
+        // Set approval variables
+        inv.content.approved = 'true';
+        inv.content.approval_timestamp = new Date().toISOString();
+
+        // Setup object to be pushed into bulk update request
+        obj.id = inv.id;
+        obj.content = inv.content;
+        reqBody.push(obj);
+      });
+      domo.put(`/domo/datastores/v1/collections/ap-app-data/documents/bulk`, reqBody)
+        .then(data => {
+          endLoad();
+          alert(data.Updated + ' Invoices Approved Successfully.');
+        })
+        .catch(err => console.log(err));
+      })
+      .catch(err => console.log(err));
 };

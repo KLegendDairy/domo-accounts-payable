@@ -74,6 +74,16 @@ a {
   background: coral;
 }
 
+.btn-secondary {
+  background: green;
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background: lightgreen;
+  color: #333;
+}
+
 .selected {
   border-bottom: 1px solid coral;
 }
@@ -127,7 +137,7 @@ a {
   margin-left: 0.5rem;
 }
 
-/* FILTER BAR AND BUTTON*/
+/* FILTER BAR AND BUTTONS */
 #filter {
   background-color: transparent;
   border: none;
@@ -156,6 +166,7 @@ a {
 
 #hide-summary {
   height: auto;
+  margin-left: 15px;
 }
 
 .filter-bar-container {
@@ -169,6 +180,18 @@ a {
 
 .filter-bar-container > .btn {
   height: auto;
+}
+
+.flex-btns {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  align-content: flex-start;
+}
+
+#approveBtn {
+  display: none;
 }
 
 /* DATA TABLE */

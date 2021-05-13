@@ -10,6 +10,7 @@ const footerYear = document.getElementById('year-foot');
 const summaryTable = document.getElementById('summary-table');
 const topBtn = document.getElementById('topBtn');
 const sumBtn = document.getElementById('hide-summary');
+const approveBtn = document.getElementById('approveBtn');
 
 // LOAD EVENT LISTENERS
 (function loadEventListeners() {
@@ -21,31 +22,36 @@ const sumBtn = document.getElementById('hide-summary');
   dataTable.addEventListener('change', checkBoxCheck);
   topBtn.addEventListener('click', goToTop);
   sumBtn.addEventListener('click', toggleSummary);
+  approveBtn.addEventListener('click', approveInvoices);
 })();
 
 
-// ===================== DATA CALLS =====================
+// ===================== DATA.JS CALLS =====================
 
 // FUNCTION TO DISPLAY SUMMARY TABLE
-function init() {
+async function init() {
+  isApprover();
   getSummaryTableData(`/sql/v1/accountsPayableData`, `SELECT company_ap_group, COUNT(DISTINCT CONCAT(\`unique_id\`,\`Community\`)), SUM(\`Amount Left To Pay\`) FROM accountsPayableData GROUP BY company_ap_group`);
   getInitTableData(`/data/v1/accountsPayableData?sum=amount&unique=unique_id&groupby=company,company_group,ap_group&fields=company,company_group,ap_group,amount,unique_id`);
 };
 
 // FUNCTION TO DISPLAY MGT & PROP TABLE
 function mgtAndProp() {
+  isApprover();
   getTabTableData(`/data/v1/accountsPayableData?sum=amount&groupby=unique_id,company,vendor,billDate,dueDate,dueInDays,bdcUrl,onHold,ap_group,invoice_num&filter=ap_group in ["Mgt %26 Prop Co"]`);
   getSummaryTableDetailData(`/data/v1/accountsPayableData?sum=amount&unique=unique_id&groupby=company&fields=company,amount,unique_id&filter=ap_group in ["Mgt %26 Prop Co"]`);
 };
 
 // FUNCTION TO DISPLAY DEV & OTHER CO TABLE
 function devAndOther() {
+  isApprover();
   getTabTableData(`/data/v1/accountsPayableData?sum=amount&groupby=unique_id,company,vendor,billDate,dueDate,dueInDays,bdcUrl,onHold,ap_group,invoice_num&filter=ap_group in ["Fund, Dev %26 Other"]`);
   getSummaryTableDetailData(`/data/v1/accountsPayableData?sum=amount&unique=unique_id&groupby=company&fields=company,amount,unique_id&filter=ap_group in ["Fund, Dev %26 Other"]`);
 };
 
 
 // ===================== UTILITIES =====================
+
 // DECLARE VAR FOR NUMBER OF SPINS OCCURING SO ALL TASKS COMPLETE BEFORE SPINNER IS GONE
 let spins = 0;
 
@@ -97,6 +103,16 @@ function replaceCurrency(num) {
   return num.replace(/[$,]+/g,"");
 };
 
+// FUNCTION TO ENABLE/DISABLE CHECKBOX SO TWO FUNCTIONS DO NOT RUN AT ONCE
+function toggleCheckbox(e) {
+  const isActive = e.target.disabled;
+  if(!isActive) {
+    e.target.disabled = true;
+  } else {
+    e.target.disabled = false;
+  };
+};
+
 
 // ===================== NAVBAR ITEMS =====================
 
@@ -123,7 +139,7 @@ function navClicked(e) {
       init();
       // filterBar.style.display = '';
   } else if(e.target.id === 'paid-invoices-link') {
-      document.querySelector('.container').innerHTML = '<h1>Still under development...</h1>';
+      
       // filterBar.style.display = 'none';
   };
 
@@ -136,7 +152,74 @@ function navClicked(e) {
 
 // ===================== DATA TABLE ITEMS =====================
 
-// PAINT SUMMARY TABLE
+// FUNCTION TO DISPLAY SUMMARY TABLE ON SUMMARY TAB
+function displaySummaryTab(data) {
+  summaryTable.innerHTML = '';
+  let htmlToAdd = `
+    <thead>
+      <th>Category</th>
+      <th>Invoices Due</th>
+      <th>Amount Due</th>
+      <th>Invoices Recommended</th>
+      <th>Amount Recommended</th>
+      <th>Invoices Approved</th>
+      <th>Amount Approved</th>
+      <th>Invoices Remaining</th>
+      <th>Amount Remaining</th>
+    </thead>
+    <tbody>
+  `;
+  let inv = 0;
+  let amtDue = 0;
+  let invRec = 0;
+  let amtRec = 0;
+  let invRem = 0;
+  let amtRem = 0;
+
+  data.forEach(item => {
+    htmlToAdd += `
+      <tr>
+        <td>${item.apGroup}</td>
+        <td>${formatNumber(item.invoicesDue)}</td>
+        <td>${displayCurrency(item.amountDue)}</td>
+        <td>${item.invoicesRecommended ? formatNumber(item.invoicesRecommended) : '0'}</td>
+        <td>${item.amountRecommended ? displayCurrency(item.amountRecommended) : '$0'}</td>
+        <td>0</td>
+        <td>$0</td>
+        <td>${item.invoicesRecommended ? formatNumber(item.invoicesDue - item.invoicesRecommended) : formatNumber(item.invoicesDue)}</td>
+        <td>${item.amountRecommended ? displayCurrency(Math.round(item.amountDue) - Math.round(item.amountRecommended)) : displayCurrency(item.amountDue)}</td>
+      </tr>
+    `;
+    inv += parseFloat(item.invoicesDue);
+    amtDue += parseFloat(item.amountDue);
+    if(item.invoicesRecommended) {
+      invRec += parseFloat(item.invoicesRecommended);
+    };
+    if(item.amountRecommended) {
+      amtRec += parseFloat(item.amountRecommended);
+    };
+  });
+
+  htmlToAdd += `
+    <tr class="total-row">
+      <td>Total</td>
+      <td>${formatNumber(inv)}</td>
+      <td>${displayCurrency(amtDue)}</td>
+      <td>${formatNumber(invRec)}</td>
+      <td>${displayCurrency(amtRec)}</td>
+      <td>0</td>
+      <td>$0</td>
+      <td>${formatNumber(inv - invRec)}</td>
+      <td>${displayCurrency(Math.round(amtDue) - Math.round(amtRec))}</td>
+    </tr>
+  </tbody>
+  `;
+  summaryTable.innerHTML = htmlToAdd;
+  showSummary();
+  endLoad();
+};
+
+// FUNCTION TO DISPLAY MAIN TABLE ON SUMMARY TAB
 function paintSummaryTable(data) {
   dataTable.innerHTML = '';
   let totComp = data.length;
@@ -205,116 +288,7 @@ function paintSummaryTable(data) {
   endLoad();
 };
 
-// PAINT MGT TABLE
-function paintTabTable(data) {
-  dataTable.innerHTML = '';
-  let htmlToAdd = `
-    <thead>
-      <th>Pay?</th>
-      <th>Amt to Pay</th>
-      <th>Amt Remaining</th>
-      <th>Status</th>
-      <th>Days Past Due</th>
-      <th>Company</th>
-      <th>Vendor Name</th>
-      <th>Invoice Desc</th>
-      <th>Bill.com</th>
-      <th>Total Amt Due</th>
-      <th>Approved?</th>
-    </thead>
-    <tbody>
-  `;
-
-  data.forEach(inv => {
-    htmlToAdd += `
-      <tr id="${inv.recommended ? inv.objId : 'row-' + inv.unique_id}" class="data-table-row${inv.recommended ? ' recommended' : ''}">
-        <td><input type="checkbox" class="recommend-check" id="rec-${inv.unique_id}"${inv.recommended ? ' checked' : ''}></td>
-        <td class="to-pay">${inv.amtToPay ? displayCurrency(inv.amtToPay) : '$0'}</td>
-        <td class="amt-remaining">${inv.recommended ? displayCurrency(Math.round(inv.amount) - Math.round(inv.amtToPay)) : displayCurrency(inv.amount)}</td>
-        <td>${inv.status}</td>
-        <td>${inv.dueInDays < 0 ? 'N/A' : inv.dueInDays}</td>
-        <td class="company" id="${inv.ap_group}">${inv.company}</td>
-        <td class ="vendor">${inv.vendor}</td>
-        <td class ="description">${inv.invoice_num}</td>
-        <td>${inv.bdcUrl ? '<a href="' + inv.bdcUrl + '" target="_blank">' + inv.unique_id + '</a>' : ''}</td>
-        <td class="tot-amt">${displayCurrency(inv.amount)}</td>
-        <td class="approval-cell${inv.approved ? ' approved' : ''}">${inv.approved ? 'Approved' : ''}</td>
-      </tr>
-    `;
-  });
-
-  htmlToAdd += `</tbody>`
-  dataTable.innerHTML = htmlToAdd;
-  endLoad();
-};
-
-// FUNCTION TO DISPLAY SUMMARY TABLE
-function displaySummaryTab(data) {
-  summaryTable.innerHTML = '';
-  let htmlToAdd = `
-    <thead>
-      <th>Category</th>
-      <th>Invoices Due</th>
-      <th>Amount Due</th>
-      <th>Invoices Recommended</th>
-      <th>Amount Recommended</th>
-      <th>Invoices Approved</th>
-      <th>Amount Approved</th>
-      <th>Invoices Remaining</th>
-      <th>Amount Remaining</th>
-    </thead>
-    <tbody>
-  `;
-  let inv = 0;
-  let amtDue = 0;
-  let invRec = 0;
-  let amtRec = 0;
-  let invRem = 0;
-  let amtRem = 0;
-
-  data.forEach(item => {
-    htmlToAdd += `
-      <tr>
-        <td>${item.apGroup}</td>
-        <td>${formatNumber(item.invoicesDue)}</td>
-        <td>${displayCurrency(item.amountDue)}</td>
-        <td>${item.invoicesRecommended ? formatNumber(item.invoicesRecommended) : '0'}</td>
-        <td>${item.amountRecommended ? displayCurrency(item.amountRecommended) : '$0'}</td>
-        <td>0</td>
-        <td>$0</td>
-        <td>${item.invoicesRecommended ? formatNumber(item.invoicesDue - item.invoicesRecommended) : formatNumber(item.invoicesDue)}</td>
-        <td>${item.amountRecommended ? displayCurrency(Math.round(item.amountDue) - Math.round(item.amountRecommended)) : displayCurrency(item.amountDue)}</td>
-      </tr>
-    `;
-    inv += parseFloat(item.invoicesDue);
-    amtDue += parseFloat(item.amountDue);
-    if(item.invoicesRecommended) {
-      invRec += parseFloat(item.invoicesRecommended);
-    };
-    if(item.amountRecommended) {
-      amtRec += parseFloat(item.amountRecommended);
-    };
-  });
-
-  htmlToAdd += `
-    <tr class="total-row">
-      <td>Total</td>
-      <td>${formatNumber(inv)}</td>
-      <td>${displayCurrency(amtDue)}</td>
-      <td>${formatNumber(invRec)}</td>
-      <td>${displayCurrency(amtRec)}</td>
-      <td>0</td>
-      <td>$0</td>
-      <td>${formatNumber(inv - invRec)}</td>
-      <td>${displayCurrency(Math.round(amtDue) - Math.round(amtRec))}</td>
-    </tr>
-  </tbody>
-  `;
-  summaryTable.innerHTML = htmlToAdd;
-  showSummary();
-  endLoad();
-};
-
+// DETAIL TAB PAGES ===============================
 
 // FUNCTION TO DISPLAY SUMMARY TABLE - DETAIL PAGES
 function displaySummaryTabDetail(data) {
@@ -393,6 +367,64 @@ function displaySummaryTabDetail(data) {
   endLoad();
 };
 
+// FUNCTION TO DISPLAY DETAIL TABLE WITH INVOICE SELECTION ON DETAIL TABS
+function paintTabTable(data) {
+  dataTable.innerHTML = '';
+  let htmlToAdd = `
+    <thead>
+      <th>Pay?</th>
+      <th>Amt to Pay</th>
+      <th>Amt Remaining</th>
+      <th>Status</th>
+      <th>Days Past Due</th>
+      <th>Company</th>
+      <th>Vendor Name</th>
+      <th>Invoice Desc</th>
+      <th>Bill.com</th>
+      <th>Total Amt Due</th>
+      <th>Approved?</th>
+    </thead>
+    <tbody>
+  `;
+
+  data.forEach(inv => {
+    htmlToAdd += `
+      <tr id="${inv.recommended ? inv.objId : 'row-' + inv.unique_id}" class="data-table-row${inv.recommended ? ' recommended' : ''}">
+        <td><input type="checkbox" class="recommend-check" id="rec-${inv.unique_id}"${inv.recommended ? ' checked' : ''}></td>
+        <td class="to-pay">${inv.amtToPay ? displayCurrency(inv.amtToPay) : '$0'}</td>
+        <td class="amt-remaining">${inv.recommended ? displayCurrency(Math.round(inv.amount) - Math.round(inv.amtToPay)) : displayCurrency(inv.amount)}</td>
+        <td>${inv.status}</td>
+        <td>${inv.dueInDays < 0 ? 'N/A' : inv.dueInDays}</td>
+        <td class="company" id="${inv.ap_group}">${inv.company}</td>
+        <td class ="vendor">${inv.vendor}</td>
+        <td class ="description">${inv.invoice_num}</td>
+        <td>${inv.bdcUrl ? '<a href="' + inv.bdcUrl + '" target="_blank">' + inv.unique_id + '</a>' : ''}</td>
+        <td class="tot-amt">${displayCurrency(inv.amount)}</td>
+        <td class="approval-cell${inv.approved ? ' approved' : ''}">${inv.approved ? 'Approved' : ''}</td>
+      </tr>
+    `;
+  });
+
+  htmlToAdd += `</tbody>`
+  dataTable.innerHTML = htmlToAdd;
+  endLoad();
+};
+
+
+// ===================== INVOICE APPROVAL FUNCTIONS =====================
+
+// FUNCTION TO APPROVE ALL INVOICES
+function approveInvoices(e) {
+  let apr = confirm('You are going to mark all recommended invoices as approved.\nAre you sure you want to continue?')
+  if(apr) {
+    approveAllInvoices();
+  } else {
+    alert('No invoices approved');
+  };
+
+  e.preventDefault();
+};
+
 
 // ===================== FUNCTIONS FOR UI INTERACTIONS =====================
 
@@ -437,6 +469,8 @@ function displaySummaryTabDetail(data) {
 // CHECKING OF CHECKBOXES
 function checkBoxCheck(e) {
   if(e.target.classList.contains('recommend-check')) {
+    // Disable checkbox to avoid double click
+    toggleCheckbox(e);
     if(e.target.checked) {
       if(!e.target.parentElement.parentElement.classList.contains('recommended')) {
         e.target.parentElement.parentElement.classList.add('recommended');
@@ -521,7 +555,7 @@ function checkBoxCheck(e) {
           rec_for_pmt_timestamp: recForPmtTimestamp
         };
 
-        saveInvoiceToDatabase(invoiceData, `row-${uniqueId}`);
+        saveInvoiceToDatabase(invoiceData, `row-${uniqueId}`, e);
       };
     } else {
       if(e.target.parentElement.parentElement.classList.contains('recommended')) {
@@ -591,7 +625,7 @@ function checkBoxCheck(e) {
         amtRemaining.innerHTML = displayCurrency(amtParsed);
 
         const record = recordIdParsed
-        deleteInvoiceFromDatabase(recordId, record);
+        deleteInvoiceFromDatabase(recordId, record, e);
       };
     };
   };
