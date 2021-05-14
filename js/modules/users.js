@@ -1,16 +1,25 @@
-function isApprover() {
+async function isApprover() {
+  startLoad();
   const userId = domo.env.userId;
+  const areApproved = await getInvDetails();
   domo.get(`/domo/users/v1/${userId}?includeDetails=true`)
   .then(data => {
     if(data.displayName === 'Kevin Larrivee' || data.displayName === 'Bill Johnston') {
       approveBtn.style.display = 'block';
-      return true;
+      if(areApproved.inv > 0) {
+        unapproveBtn.style.display = 'block';
+      } else {
+        unapproveBtn.style.display = 'none';
+      };
     } else {
       if(approveBtn) {
         approveBtn.remove();
       };
-      return false;
+      if(unapproveBtn) {
+        unapproveBtn.remove();
+      };
     };
+    endLoad();
   })
   .catch(err => console.log(err));
 };

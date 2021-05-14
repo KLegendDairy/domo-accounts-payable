@@ -80,8 +80,18 @@ a {
 }
 
 .btn-secondary:hover {
-  background: lightgreen;
+  background: #b2dcbb;
   color: #333;
+}
+
+.btn-warning {
+  background: #dbba16;
+  color: #fff;
+}
+
+.btn-warning:hover {
+  background: red;
+  color: #fff;
 }
 
 .selected {
@@ -89,7 +99,7 @@ a {
 }
 
 .recommended {
-  background: #b2dcbb;
+  background: #fcda0d;
 }
 
 .negative-num {
@@ -98,6 +108,24 @@ a {
 
 .warning-num {
   color: coral;
+}
+
+.approved {
+  background: #b2dcbb;
+}
+
+.primary-text {
+  color: coral;
+  font-weight: bold;
+  text-decoration: underline;
+  font-size: 1.2rem;
+}
+
+.secondary-text {
+  color: green;
+  font-weight: bold;
+  text-decoration: underline;
+  font-size: 1.2rem;
 }
 
 /* LOADING SPINNER */
@@ -164,7 +192,8 @@ a {
   align-content: flex-start;
 }
 
-#hide-summary {
+#hide-summary,
+#approveBtn {
   height: auto;
   margin-left: 15px;
 }
@@ -223,6 +252,13 @@ a {
   background: #afe0f0;
   color: #000;
 }
+.table-styles tbody td:hover {
+  background: #79acbd;
+}
+
+.table-styles tbody tr:last-child td:hover {
+  background: #ba5530 !important;
+}
 
 thead {
   background: #333;
@@ -239,8 +275,18 @@ thead th:first-child {
   text-align: left;
 }
 
-.recommended:hover {
+.approved:hover {
   background: #43a75a !important;
+}
+.approved > td:hover {
+  background: #2a803e !important;
+}
+
+.recommended:hover {
+  background: #be9528 !important;
+}
+.recommended > td:hover {
+  background: #ebc04d !important;
 }
 
 .total-row {

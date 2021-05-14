@@ -11,9 +11,9 @@ const summaryTable = document.getElementById('summary-table');
 const topBtn = document.getElementById('topBtn');
 const sumBtn = document.getElementById('hide-summary');
 const approveBtn = document.getElementById('approveBtn');
+const unapproveBtn = document.getElementById('unapproveBtn');
 const modal = document.getElementById('modal-div');
 const modalText = document.getElementById('modal-text');
-const modalBtnText = document.getElementById('modal-btn-txt');
 const modalBtn = document.querySelector('.modal-btn');
 const closeModal = document.getElementById('close-modal');
 
@@ -30,13 +30,14 @@ const closeModal = document.getElementById('close-modal');
   approveBtn.addEventListener('click', approveInvoices);
   modalBtn.addEventListener('click', modalBtnClick);
   closeModal.addEventListener('click', hideModal);
+  unapproveBtn.addEventListener('click', unapproveInvoices);
 })();
 
 
 // ===================== DATA.JS CALLS =====================
 
 // FUNCTION TO DISPLAY SUMMARY TABLE
-async function init() {
+function init() {
   isApprover();
   getSummaryTableData(`/sql/v1/accountsPayableData`, `SELECT company_ap_group, COUNT(DISTINCT CONCAT(\`unique_id\`,\`Community\`)), SUM(\`Amount Left To Pay\`) FROM accountsPayableData GROUP BY company_ap_group`);
   getInitTableData(`/data/v1/accountsPayableData?sum=amount&unique=unique_id&groupby=company,company_group,ap_group&fields=company,company_group,ap_group,amount,unique_id`);
@@ -180,8 +181,8 @@ function displaySummaryTab(data) {
   let amtDue = 0;
   let invRec = 0;
   let amtRec = 0;
-  let invRem = 0;
-  let amtRem = 0;
+  let invApr = 0;
+  let amtApr = 0;
 
   data.forEach(item => {
     htmlToAdd += `
@@ -189,10 +190,10 @@ function displaySummaryTab(data) {
         <td>${item.apGroup}</td>
         <td>${formatNumber(item.invoicesDue)}</td>
         <td>${displayCurrency(item.amountDue)}</td>
-        <td>${item.invoicesRecommended ? formatNumber(item.invoicesRecommended) : '0'}</td>
-        <td>${item.amountRecommended ? displayCurrency(item.amountRecommended) : '$0'}</td>
-        <td>0</td>
-        <td>$0</td>
+        <td class="${item.invoicesRecommended ? ' recommended' : ''}">${item.invoicesRecommended ? formatNumber(item.invoicesRecommended) : '0'}</td>
+        <td class="${item.amountRecommended ? ' recommended' : ''}">${item.amountRecommended ? displayCurrency(item.amountRecommended) : '$0'}</td>
+        <td class="${item.approved ? ' approved' : ''}">${item.approved ? formatNumber(item.approved) : '0'}</td>
+        <td class="${item.approvedAmount ? ' approved' : ''}">${item.approvedAmount ? displayCurrency(item.approvedAmount) : '$0'}</td>
         <td>${item.invoicesRecommended ? formatNumber(item.invoicesDue - item.invoicesRecommended) : formatNumber(item.invoicesDue)}</td>
         <td>${item.amountRecommended ? displayCurrency(Math.round(item.amountDue) - Math.round(item.amountRecommended)) : displayCurrency(item.amountDue)}</td>
       </tr>
@@ -205,6 +206,12 @@ function displaySummaryTab(data) {
     if(item.amountRecommended) {
       amtRec += parseFloat(item.amountRecommended);
     };
+    if(item.approved) {
+      invApr += parseFloat(item.approved);
+    };
+    if(item.approvedAmount) {
+      amtApr += parseFloat(item.approvedAmount);
+    };
   });
 
   htmlToAdd += `
@@ -214,8 +221,8 @@ function displaySummaryTab(data) {
       <td>${displayCurrency(amtDue)}</td>
       <td>${formatNumber(invRec)}</td>
       <td>${displayCurrency(amtRec)}</td>
-      <td>0</td>
-      <td>$0</td>
+      <td>${formatNumber(invApr)}</td>
+      <td>${displayCurrency(amtApr)}</td>
       <td>${formatNumber(inv - invRec)}</td>
       <td>${displayCurrency(Math.round(amtDue) - Math.round(amtRec))}</td>
     </tr>
@@ -234,6 +241,8 @@ function paintSummaryTable(data) {
   let amtDue = 0;
   let invToPay = 0;
   let amtToPay = 0;
+  let invApr = 0;
+  let amtApr = 0;
   let htmlToAdd = `
         <thead>
           <th>Category</th>
@@ -252,16 +261,16 @@ function paintSummaryTable(data) {
 
   data.forEach(company => {
     htmlToAdd += `
-    <tr id="row-${company.company}" class="data-table-row${company.invToPay ? ' recommended' : ''}">
+    <tr id="row-${company.company}" class="data-table-row">
       <td class="company-category">${company.ap_group}</td>
       <td class="company-group">${company.company_group}</td>
       <td class="company">${company.company}</td>
       <td class="inv-due">${formatNumber(company.unique_id)}</td>
       <td class="amt-due">${displayCurrency(company.amount)}</td>
-      <td class="inv-rec">${company.invToPay ? formatNumber(company.invToPay) : '0'}</td>
-      <td class="amt-rec">${company.recForPmt ? displayCurrency(company.recForPmt) : '$0'}</td>
-      <td class="inv-apr">0</td>
-      <td class="amt-apr">$0</td>
+      <td class="inv-rec${company.invToPay ? ' recommended' : ''}">${company.invToPay ? formatNumber(company.invToPay) : '0'}</td>
+      <td class="amt-rec${company.recForPmt ? ' recommended' : ''}">${company.recForPmt ? displayCurrency(company.recForPmt) : '$0'}</td>
+      <td class="inv-apr${company.approved ? ' approved' : ''}">${company.approved ? formatNumber(company.approved) : '0'}</td>
+      <td class="amt-apr${company.approvedAmount ? ' approved' : ''}">${company.approvedAmount ? displayCurrency(company.approvedAmount) : '$0'}</td>
       <td class="inv-rem">${company.invToPay ? formatNumber(company.unique_id - company.invToPay) : formatNumber(company.unique_id)}</td>
       <td class="amt-rem">${company.recForPmt ? displayCurrency(company.amount - company.recForPmt) : displayCurrency(company.amount)}</td>
     </tr>`;
@@ -320,17 +329,27 @@ function displaySummaryTabDetail(data) {
   let amtRec = 0;
   let invRem = 0;
   let amtRem = 0;
+  let invApr = 0;
+  let amtApr = 0;
 
   data.forEach(item => {
+    let rec_class = '';
+    let apr_class = '';
+    if(item.invoicesRecommended) {
+      rec_class = ' recommended';
+    };
+    if(item.approved) {
+      apr_class = ' approved';
+    };
     htmlToAdd += `
-      <tr id="summary-${item.company}" class="summary-row${item.invoicesRecommended ? ' recommended' : ''}">
+      <tr id="summary-${item.company}" class="summary-row">
         <td class="company">${item.company}</td>
         <td class="inv">${formatNumber(item.unique_id)}</td>
         <td class="amt">${displayCurrency(item.amount)}</td>
-        <td class="inv-rec">${item.invoicesRecommended ? formatNumber(item.invoicesRecommended) : '0'}</td>
-        <td class="amt-rec">${item.amountRecommended ? displayCurrency(item.amountRecommended) : '$0'}</td>
-        <td class="inv-apr">0</td>
-        <td class="amt-apr">$0</td>
+        <td class="inv-rec${rec_class}">${item.invoicesRecommended ? formatNumber(item.invoicesRecommended) : '0'}</td>
+        <td class="amt-rec${rec_class}">${item.amountRecommended ? displayCurrency(item.amountRecommended) : '$0'}</td>
+        <td class="inv-apr${apr_class}">${item.approved ? formatNumber(item.approved) : '0'}</td>
+        <td class="amt-apr${apr_class}">${item.approvedAmount ? displayCurrency(item.approvedAmount) : '$0'}</td>
         <td class="inv-rem">${item.invoicesRecommended ? formatNumber(item.unique_id - item.invoicesRecommended) : formatNumber(item.unique_id)}</td>
         <td class="amt-rem">${item.amountRecommended ? displayCurrency(Math.round(item.amount) - Math.round(item.amountRecommended)) : displayCurrency(item.amount)}</td>
       </tr>
@@ -353,6 +372,12 @@ function displaySummaryTabDetail(data) {
     } else {
       amtRem += parseFloat(item.amount);
     };
+    if(item.approved) {
+      invApr += parseFloat(item.approved);
+    };
+    if(item.approvedAmount) {
+      amtApr += parseFloat(item.approvedAmount);
+    };
   });
 
   htmlToAdd += `
@@ -362,8 +387,8 @@ function displaySummaryTabDetail(data) {
       <td class="total-amt">${displayCurrency(amtDue)}</td>
       <td class="total-inv-rec">${formatNumber(invRec)}</td>
       <td class="total-amt-rec">${displayCurrency(amtRec)}</td>
-      <td class="total-inv-apr">0</td>
-      <td class="total-amt-apr">$0</td>
+      <td class="total-inv-apr">${formatNumber(invApr)}</td>
+      <td class="total-amt-apr">${displayCurrency(amtApr)}</td>
       <td class="total-inv-rem">${formatNumber(invRem)}</td>
       <td class="total-amt-rem">${displayCurrency(amtRem)}</td>
     </tr>
@@ -397,8 +422,14 @@ function paintTabTable(data) {
   data.forEach(inv => {
     let aprDate = '';
     inv.approval ? aprDate = new Date(inv.approval) : '';
+    let row_class = '';
+    if(inv.recommended && inv.approval) {
+      row_class = ' approved'
+    } else if(inv.recommended) {
+      row_class = ' recommended'
+    };
     htmlToAdd += `
-      <tr id="${inv.recommended ? inv.objId : 'row-' + inv.unique_id}" class="data-table-row${inv.recommended ? ' recommended' : ''}">
+      <tr id="${inv.recommended ? inv.objId : 'row-' + inv.unique_id}" class="data-table-row${row_class}">
         <td><input type="checkbox" class="recommend-check" id="rec-${inv.unique_id}"${inv.recommended ? ' checked' : ''}></td>
         <td class="to-pay">${inv.amtToPay ? displayCurrency(inv.amtToPay) : '$0'}</td>
         <td class="amt-remaining">${inv.recommended ? displayCurrency(Math.round(inv.amount) - Math.round(inv.amtToPay)) : displayCurrency(inv.amount)}</td>
@@ -409,7 +440,7 @@ function paintTabTable(data) {
         <td class ="description">${inv.invoice_num}</td>
         <td>${inv.bdcUrl ? '<a href="' + inv.bdcUrl + '" target="_blank">' + inv.unique_id + '</a>' : ''}</td>
         <td class="tot-amt">${displayCurrency(inv.amount)}</td>
-        <td class="approval-cell${inv.approval ? ' approved' : ''}">${inv.approval ? aprDate.getMonth() + '/' + aprDate.getDay() + '/' + aprDate.getFullYear() : ''}</td>
+        <td class="approval-cell">${inv.approval ? aprDate.getMonth() + '/' + aprDate.getDay() + '/' + aprDate.getFullYear() : ''}</td>
       </tr>
     `;
   });
@@ -423,14 +454,43 @@ function paintTabTable(data) {
 // ===================== INVOICE APPROVAL FUNCTIONS =====================
 
 // FUNCTION TO APPROVE ALL INVOICES
-function approveInvoices(e) {
-  const modTxt = 'You are about to approve all recommended invoices. Are you sure you want to proceed?'
-  const btTxt = 'Yes'
-  const bId = 'approve'
-  showModal(modTxt, btTxt, bId);
+async function approveInvoices(e) {
+  startLoad()
+  const invDet = await getInvDetails()
+  if(invDet.num) {
+    const modTxt = `You are about to approve <span class="primary-text">${formatNumber(invDet.num)}</span> recommended invoices totaling <span class="primary-text">${displayCurrency(invDet.total)}</span>. <br><br> <span class="secondary-text">${invDet.inv ? formatNumber(invDet.inv) : '0'}</span> invoices totaling <span class="secondary-text">${invDet.amt ? displayCurrency(invDet.amt) : '$0'}</span> have already been approved.<br><br>Are you sure you want to continue?`
+    const btTxt = `Yes - Approve ${formatNumber(invDet.num)} Invoices`
+    const bId = 'approve'
+    showModal(modTxt, btTxt, bId);
+  } else {
+    const modTxt = 'No invoices have been recommended for payment. Please select invoices to approve before clicking approve.';
+    const btTxt = 'Okay';
+    const bId = 'okay';
+    showModal(modTxt, btTxt, bId);
+  };
+  endLoad();
 
   e.preventDefault();
 };
+
+// FUNCTION TO UNAPPROVE ALL INVOICES
+async function unapproveInvoices(e) {
+  startLoad();
+  const invDet = await getInvDetails();
+  if(invDet.inv) {
+    const modTxt = `You are about to unapprove <span class="primary-text">${formatNumber(invDet.inv)}</span> approved invoices totaling <span class="primary-text">${displayCurrency(invDet.amt)}</span>. <br><br> Are you sure you want to continue?`;
+    const btTxt = `Yes - Unapprove ${formatNumber(invDet.inv)} Invoices`;
+    const bId = 'unapprove';
+    showModal(modTxt, btTxt, bId);
+  } else {
+    const modTxt = 'There are no approved invoices to unapprove at the moment.';
+    const btTxt = 'Okay';
+    const bId = 'okay';
+    showModal(modTxt, btTxt, bId);
+  }
+  endLoad();
+  e.preventDefault();
+}
 
 
 // ===================== FUNCTIONS FOR UI INTERACTIONS =====================
@@ -503,10 +563,16 @@ function checkBoxCheck(e) {
             const invCell = tabRows[i].getElementsByClassName('inv-rec')[0];
             let curInv = parseInt(invCell.innerHTML.replace(',','')) + 1;
             invCell.innerHTML = formatNumber(curInv);
+            if(!invCell.classList.contains('recommended')) {
+              invCell.classList.add('recommended');
+            };
             // Amount Recommended
             const amtCell = tabRows[i].getElementsByClassName('amt-rec')[0];
             let curAmt = parseFloat(replaceCurrency(amtCell.innerHTML)) + payParsed;
             amtCell.innerHTML = displayCurrency(curAmt);
+            if(!amtCell.classList.contains('recommended')) {
+              amtCell.classList.add('recommended');
+            };
             // Invoices Remaining
             const remInvCell = tabRows[i].getElementsByClassName('inv-rem')[0];
             let remInv = parseInt(remInvCell.innerHTML.replace(',','')) - 1;
@@ -536,10 +602,6 @@ function checkBoxCheck(e) {
             const curTotAmtRem = parseFloat(replaceCurrency(totAmtRem.innerHTML)) - payParsed;
             totAmtRem.innerHTML = displayCurrency(curTotAmtRem);
 
-            // Update row class to include recommended if it doesn't already have
-            if(!tabRows[i].classList.contains('recommended')) {
-              tabRows[i].classList.add('recommended');
-            };
             // Break loop to avoid unnecessary looping once the company is found
             break;
           };
@@ -565,7 +627,7 @@ function checkBoxCheck(e) {
         saveInvoiceToDatabase(invoiceData, `row-${uniqueId}`, e);
       };
     } else {
-      if(e.target.parentElement.parentElement.classList.contains('recommended')) {
+      if(e.target.parentElement.parentElement.classList.contains('recommended') || e.target.parentElement.parentElement.classList.contains('approved')) {
         e.target.parentElement.parentElement.classList.remove('recommended');
         const pay = e.target.parentElement.parentElement.getElementsByClassName('to-pay')[0];
         const amt = e.target.parentElement.parentElement.getElementsByClassName('tot-amt')[0];
@@ -573,6 +635,8 @@ function checkBoxCheck(e) {
         const recordId = e.target.parentElement.parentElement.id;
         const id = e.target.id;
         const compGroup = e.target.parentElement.parentElement.getElementsByClassName('company')[0];
+        const aprCell = e.target.parentElement.parentElement.getElementsByClassName('approval-cell')[0];
+        aprCell.innerHTML = '';
 
         const payParsed = parseFloat(replaceCurrency(pay.innerText));
         const amtParsed = parseFloat(replaceCurrency(amt.innerText));
@@ -586,10 +650,16 @@ function checkBoxCheck(e) {
             const invCell = tabRows[i].getElementsByClassName('inv-rec')[0];
             let curInv = parseInt(invCell.innerHTML.replace(',','')) - 1;
             invCell.innerHTML = formatNumber(curInv);
+            if(invCell.classList.contains('recommended') && curInv === 0) {
+              invCell.classList.remove('recommended');
+            };
             // Amount Recommended
             const amtCell = tabRows[i].getElementsByClassName('amt-rec')[0];
             let curAmt = parseFloat(replaceCurrency(amtCell.innerHTML)) - payParsed;
             amtCell.innerHTML = displayCurrency(curAmt);
+            if(amtCell.classList.contains('recommended') && curAmt === 0) {
+              amtCell.classList.remove('recommended');
+            };
             // Invoices Remaining
             const remInvCell = tabRows[i].getElementsByClassName('inv-rem')[0];
             let remInv = parseInt(remInvCell.innerHTML.replace(',','')) + 1;
@@ -619,10 +689,36 @@ function checkBoxCheck(e) {
             const curTotAmtRem = parseFloat(replaceCurrency(totAmtRem.innerHTML)) + payParsed;
             totAmtRem.innerHTML = displayCurrency(curTotAmtRem);
 
-            // Update row class to include recommended if it doesn't already have
-            if(tabRows[i].classList.contains('recommended') && curInv === 0) {
-              tabRows[i].classList.remove('recommended');
+            // Only edit approved if invoice is approved
+            if(e.target.parentElement.parentElement.classList.contains('approved')) {
+              // Invoices Approved
+              const aprInvCell = tabRows[i].getElementsByClassName('inv-apr')[0];
+              let curAprInv = parseInt(aprInvCell.innerHTML.replace(',','')) - 1;
+              aprInvCell.innerHTML = formatNumber(curAprInv);
+              if(aprInvCell.classList.contains('approved') && curAprInv === 0) {
+                aprInvCell.classList.remove('approved');
+              };
+              // Amount Approved
+              const aprAmtCell = tabRows[i].getElementsByClassName('amt-apr')[0];
+              let curAprAmt = parseFloat(replaceCurrency(aprAmtCell.innerHTML)) - payParsed;
+              aprAmtCell.innerHTML = displayCurrency(curAprAmt);
+              if(aprAmtCell.classList.contains('approved') && curAprAmt === 0) {
+                aprAmtCell.classList.remove('approved');
+              };
+              // Total Invoices Approved
+              const totInvApr = totRow.getElementsByClassName('total-inv-apr')[0];
+              const curTotInvApr = parseInt(totInvApr.innerHTML.replace(',','')) - 1;
+              totInvApr.innerHTML = formatNumber(curTotInvApr);
+              if(curTotInvApr === 0 && unapproveBtn) {
+                unapproveBtn.style.display = 'none';
+              };
+              // Total Amount Approved
+              const totAmtApr = totRow.getElementsByClassName('total-amt-apr')[0];
+              const curTotAmtApr = parseFloat(replaceCurrency(totAmtApr.innerHTML)) - payParsed;
+              totAmtApr.innerHTML = displayCurrency(curTotAmtApr);
+              e.target.parentElement.parentElement.classList.remove('approved');
             };
+
             // Break loop to avoid unnecessary looping once the company is found
             break;
           };
@@ -660,7 +756,7 @@ function showSummary() {
 
 // HIDE AND SHOW MODAL FUNCTIONS
 function showModal(text, btnText, btnId) {
-  modalBtnText.innerHTML = btnText;
+  modalBtn.innerHTML = btnText;
   modalText.innerHTML = text;
   modalBtn.id = btnId;
 
@@ -678,6 +774,8 @@ function hideModal(e) {
 function modalBtnClick(e) {
   if(e.target.id === 'approve') {
     approveAllInvoices();
+  } else if(e.target.id === 'unapprove') {
+    unapproveAllInvoices();
   };
 
   hideModal();

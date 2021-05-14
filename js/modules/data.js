@@ -16,22 +16,38 @@ function getSummaryTableData(url, query) {
           amountDue: item[2]
         });
       });
-    domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.ap_group&count=documentCount&sum=content.amt_to_pay`,{})
-      .then(data => {
-        data.forEach(group => {
-          let i = resData.findIndex(item => item.apGroup === group._id);
-          if(i !== -1) {
-            resData[i].invoicesRecommended = group.documentCount;
-            resData[i].amountRecommended = group.amt_to_pay;
-          };
-        });
-        displaySummaryTab(resData);
-      });
+      domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.ap_group&count=documentCount&sum=content.amt_to_pay`,{})
+        .then(data => {
+          domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.ap_group&count=documentCount&sum=content.amt_to_pay&filter=`,{
+            "content.approved": {
+              $eq: 'true'
+            }
+          })
+            .then(newData => {
+              newData.forEach(apr => {
+                x = resData.findIndex(rec => rec.apGroup === apr._id);
+                if(x !== -1) {
+                  resData[x].approved = apr.documentCount;
+                  resData[x].approvedAmount = apr.amt_to_pay;
+                };
+              });
+              data.forEach(group => {
+                let i = resData.findIndex(item => item.apGroup === group._id);
+                if(i !== -1) {
+                  resData[i].invoicesRecommended = group.documentCount;
+                  resData[i].amountRecommended = group.amt_to_pay;
+                };
+              });
+              displaySummaryTab(resData);
+            })
+            .catch(err => console.log(err));
+        })
+        .catch(err => console.log(err));
     })
     .catch(err => console.log(err));
 };
 
-// GET DATA
+// GET DATA FOR COMPANY TABLE ON SUMMARY TAB
 function getInitTableData(query) {
   startLoad();
   domo.get(query)
@@ -45,14 +61,29 @@ function getInitTableData(query) {
       });
       domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.company&count=documentCount&sum=content.amt_to_pay`,{})
         .then(appData => {
-          appData.forEach(inv => {
-            let i = resData.findIndex(item => item.company === inv._id);
-            if(i !== -1) {
-              resData[i].recForPmt = inv.amt_to_pay;
-              resData[i].invToPay = inv.documentCount;
-            };
-          });
-          paintSummaryTable(resData);
+          domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.company&count=documentCount&sum=content.amt_to_pay&filter=`,{
+            "content.approved": {
+              $eq: 'true'
+            }
+          })
+            .then(newData => {
+              newData.forEach(apr => {
+                x = resData.findIndex(rec => rec.company === apr._id);
+                if(x !== -1) {
+                  resData[x].approved = apr.documentCount;
+                  resData[x].approvedAmount = apr.amt_to_pay;
+                };
+              });
+              appData.forEach(inv => {
+                let i = resData.findIndex(item => item.company === inv._id);
+                if(i !== -1) {
+                  resData[i].recForPmt = inv.amt_to_pay;
+                  resData[i].invToPay = inv.documentCount;
+                };
+              });
+              paintSummaryTable(resData);
+            })
+            .catch(err => console.log(err));
         })
         .catch(err => console.log(err));
     })
@@ -76,21 +107,41 @@ function getSummaryTableDetailData(query) {
       });
       domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.company&count=documentCount&sum=content.amt_to_pay`,{})
         .then(data => {
-          data.forEach(inv => {
-            i = resData.findIndex(item => item.company === inv._id);
-            if(i !== -1) {
-              resData[i].invoicesRecommended = inv.documentCount;
-              resData[i].amountRecommended = inv.amt_to_pay;
-            };
-          });
-          displaySummaryTabDetail(resData);
+          domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.company&count=documentCount&sum=content.amt_to_pay&filter=`,{
+            "content.approved": {
+              $eq: 'true'
+            }
+          })
+          .then(newData => {
+            newData.forEach(apr => {
+              x = data.findIndex(rec => rec._id === apr._id);
+              if(x !== -1) {
+                data[x].approved = apr.documentCount;
+                data[x].approvedAmount = apr.amt_to_pay;
+              };
+            });
+            data.forEach(inv => {
+              i = resData.findIndex(item => item.company === inv._id);
+              if(i !== -1) {
+                resData[i].invoicesRecommended = inv.documentCount;
+                resData[i].amountRecommended = inv.amt_to_pay;
+                if(inv.approved) {
+                  resData[i].approved = inv.approved;
+                };
+                if(inv.approvedAmount) {
+                  resData[i].approvedAmount = inv.approvedAmount;
+                };
+              };
+            });
+            displaySummaryTabDetail(resData);
+          })
         })
         .catch(err => console.log(err));
     })
     .catch(err => console.log(err));
 };
 
-// QUERY MGT AND PROP CO DATA
+// QUERY MGT AND PROP CO DETAIL DATA
 function getTabTableData(query) {
   startLoad();
   domo.get(`/domo/datastores/v1/collections/ap-app-data/documents/`)
@@ -205,10 +256,14 @@ function deleteInvoiceFromDatabase(target, id, e) {
 };
 
 
-// ============== APPROVE ALL INVOICES ================
+// ============== INVOICE APPROVALS ================
 function approveAllInvoices() {
   startLoad();
-  domo.get(`/domo/datastores/v1/collections/ap-app-data/documents/`)
+  domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query`,{
+    "content.approved": {
+      $ne: 'true'
+    }
+  })
     .then(data => {
       const reqBody = [];
       data.forEach(inv => {
@@ -226,7 +281,8 @@ function approveAllInvoices() {
       domo.put(`/domo/datastores/v1/collections/ap-app-data/documents/bulk`, reqBody)
         .then(data => {
           endLoad();
-          const mTxt = `${data.Updated} invoices are approved!`
+          document.querySelector('.selected').click();
+          const mTxt = `<span class="secondary-text">${data.Updated}</span> invoices have been successfully approved!`
           const bTxt = 'Okay'
           const bId = 'close'
           showModal(mTxt, bTxt, bId);
@@ -234,4 +290,60 @@ function approveAllInvoices() {
         .catch(err => console.log(err));
       })
       .catch(err => console.log(err));
+};
+
+function unapproveAllInvoices() {
+  startLoad();
+  domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query`,{
+    "content.approved": {
+      $eq: 'true'
+    }
+  })
+    .then(data => {
+      const reqBody = [];
+      data.forEach(inv => {
+        const obj = {};
+        delete inv.content.approved;
+        delete inv.content.approval_timestamp
+
+        obj.id = inv.id;
+        obj.content = inv.content;
+        reqBody.push(obj);
+      });
+      domo.put(`/domo/datastores/v1/collections/ap-app-data/documents/bulk`, reqBody)
+      .then(data => {
+        endLoad();
+        document.querySelector('.selected').click();
+        const mTxt = `<span class="secondary-text">${data.Updated}</span> invoices have been successfully unapproved.`
+        const bTxt = 'Okay'
+        const bId = 'close'
+        showModal(mTxt, bTxt, bId);
+      })
+      .catch(err => console.log(err));
+    })
+    .catch(err => console.log(err));
+};
+
+
+// ================ GET DETAILS FOR UI INTERACTION ================
+
+// GET INVOICES RECOMMENDED DATA
+function getInvDetails() {
+  return new Promise((resolve, reject) => {
+    domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.approved&count=documentCount&sum=content.amt_to_pay`,{})
+      .then(data => {
+        const dataToSend = {};
+        data.forEach(item => {
+          if(item._id === 'true') {
+            dataToSend.inv = item.documentCount;
+            dataToSend.amt = item.amt_to_pay;
+          } else {
+            dataToSend.total = item.amt_to_pay;
+            dataToSend.num = item.documentCount;
+          }
+        })
+        resolve(dataToSend);
+      })
+      .catch(err => reject(err));
+  });
 };
