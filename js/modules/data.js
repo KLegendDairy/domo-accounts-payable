@@ -153,7 +153,7 @@ function getTabTableData(query) {
         const id = inv.content.unique_id.toString();
         const objId = inv.id;
         const amtToPay = inv.content.amt_to_pay;
-        const approval = inv.content.approval_timestamp ? inv.content.approval_timestamp : '';
+        let approval = inv.content.approval_timestamp;
 
         db.push(id);
         obj.push({
@@ -203,7 +203,9 @@ function getTabTableData(query) {
                 if(index !== -1) {
                   responseData[index].objId = item.objId;
                   responseData[index].amtToPay = item.amtToPay;
-                  responseData[index].approval = item.approval;
+                  if(item.approval) {
+                    responseData[index].approval = item.approval;
+                  };
                 };
               });
               paintTabTable(responseData);

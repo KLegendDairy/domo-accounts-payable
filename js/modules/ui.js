@@ -440,8 +440,10 @@ function paintTabTable(data) {
   `;
 
   data.forEach(inv => {
-    let aprDate = '';
-    inv.approval ? aprDate = new Date(inv.approval) : '';
+    let aprDate;
+    if(inv.approval) {
+      aprDate = new Date(inv.approval);
+    };
     let row_class = '';
     if(inv.recommended && inv.approval) {
       row_class = ' approved'
@@ -460,7 +462,7 @@ function paintTabTable(data) {
         <td class ="description">${inv.invoice_num}</td>
         <td>${inv.bdcUrl ? '<a href="' + inv.bdcUrl + '" target="_blank">' + inv.unique_id + '</a>' : ''}</td>
         <td class="tot-amt">${displayCurrency(inv.amount)}</td>
-        <td class="approval-cell">${inv.approval ? aprDate.getMonth() + '/' + aprDate.getDay() + '/' + aprDate.getFullYear() : ''}</td>
+        <td class="approval-cell">${inv.approval ? (aprDate.getMonth() + 1) + '/' + aprDate.getDate() + '/' + aprDate.getFullYear() : ''}</td>
       </tr>
     `;
   });
