@@ -165,15 +165,17 @@ function displaySummaryTab(data) {
   summaryTable.innerHTML = '';
   let htmlToAdd = `
     <thead>
-      <th>Category</th>
-      <th>Invoices Due</th>
-      <th>Amount Due</th>
-      <th>Invoices Recommended</th>
-      <th>Amount Recommended</th>
-      <th>Invoices Approved</th>
-      <th>Amount Approved</th>
-      <th>Invoices Remaining</th>
-      <th>Amount Remaining</th>
+      <tr>
+        <th>Category</th>
+        <th>Invoices Due</th>
+        <th>Amount Due</th>
+        <th>Invoices Recommended</th>
+        <th>Amount Recommended</th>
+        <th>Invoices Approved</th>
+        <th>Amount Approved</th>
+        <th>Invoices Remaining</th>
+        <th>Amount Remaining</th>
+      </tr>
     </thead>
     <tbody>
   `;
@@ -215,18 +217,20 @@ function displaySummaryTab(data) {
   });
 
   htmlToAdd += `
-    <tr class="total-row">
-      <td>Total</td>
-      <td>${formatNumber(inv)}</td>
-      <td>${displayCurrency(amtDue)}</td>
-      <td>${formatNumber(invRec)}</td>
-      <td>${displayCurrency(amtRec)}</td>
-      <td>${formatNumber(invApr)}</td>
-      <td>${displayCurrency(amtApr)}</td>
-      <td>${formatNumber(inv - invRec)}</td>
-      <td>${displayCurrency(Math.round(amtDue) - Math.round(amtRec))}</td>
-    </tr>
-  </tbody>
+    </tbody>
+    <tfoot>
+      <tr class="total-row">
+        <td>Total</td>
+        <td>${formatNumber(inv)}</td>
+        <td>${displayCurrency(amtDue)}</td>
+        <td>${formatNumber(invRec)}</td>
+        <td>${displayCurrency(amtRec)}</td>
+        <td>${formatNumber(invApr)}</td>
+        <td>${displayCurrency(amtApr)}</td>
+        <td>${formatNumber(inv - invRec)}</td>
+        <td>${displayCurrency(Math.round(amtDue) - Math.round(amtRec))}</td>
+      </tr>
+    </tfoot>
   `;
   summaryTable.innerHTML = htmlToAdd;
   showSummary();
@@ -235,6 +239,7 @@ function displaySummaryTab(data) {
 
 // FUNCTION TO DISPLAY MAIN TABLE ON SUMMARY TAB
 function paintSummaryTable(data) {
+  destroyTable();
   dataTable.innerHTML = '';
   let totComp = data.length;
   let invDue = 0;
@@ -245,17 +250,19 @@ function paintSummaryTable(data) {
   let amtApr = 0;
   let htmlToAdd = `
         <thead>
-          <th>Category</th>
-          <th>Group</th>
-          <th>Company</th>
-          <th>Total Inv Due</th>
-          <th>Total Amt Due</th>
-          <th>Inv Recommended</th>
-          <th>Amt Recommended</th>
-          <th>Inv Approved</th>
-          <th>Amt Approved</th>
-          <th>Inv Remaining</th>
-          <th>Amt Remaining</th>
+          <tr>
+            <th>Category</th>
+            <th>Group</th>
+            <th>Company</th>
+            <th>Total Inv Due</th>
+            <th>Total Amt Due</th>
+            <th>Inv Recommended</th>
+            <th>Amt Recommended</th>
+            <th>Inv Approved</th>
+            <th>Amt Approved</th>
+            <th>Inv Remaining</th>
+            <th>Amt Remaining</th>
+          </tr>
         </thead>
         <tbody>`;
 
@@ -274,33 +281,39 @@ function paintSummaryTable(data) {
       <td class="inv-rem">${company.invToPay ? formatNumber(company.unique_id - company.invToPay) : formatNumber(company.unique_id)}</td>
       <td class="amt-rem">${company.recForPmt ? displayCurrency(company.amount - company.recForPmt) : displayCurrency(company.amount)}</td>
     </tr>`;
-    invDue += company.unique_id;
-    amtDue += company.amount;
-    if(company.invToPay) {
-      invToPay += company.invToPay;
-    };
-    if(company.recForPmt) {
-      amtToPay += company.recForPmt;
-    };
+    // COMMENTED OUT BECAUSE ONLY USED IN TOTAL ROW =============================
+    // invDue += company.unique_id;
+    // amtDue += company.amount;
+    // if(company.invToPay) {
+    //   invToPay += company.invToPay;
+    // };
+    // if(company.recForPmt) {
+    //   amtToPay += company.recForPmt;
+    // };
   });
 
+  // IF WE NEED A TOTAL ROW, WE CAN USE THIS ===========================
+  //   <tfoot>
+  //   <tr class="total-row">
+  //     <td class="company-category">Total</td>
+  //     <td class="company-group">${totComp}</td>
+  //     <td class="company">${totComp}</td>
+  //     <td class="tot-inv-due">${formatNumber(invDue)}</td>
+  //     <td class="tot-amt-due">${displayCurrency(amtDue)}</td>
+  //     <td class="tot-inv-rec">${formatNumber(invToPay)}</td>
+  //     <td class="tot-amt-rec">${displayCurrency(amtToPay)}</td>
+  //     <td class="tot-inv-apr">0</td>
+  //     <td class="tot-amt-apr">$0</td>
+  //     <td class="tot-inv-rem">${formatNumber(invDue - invToPay)}</td>
+  //     <td class="tot-amt-rem">${displayCurrency(Math.round(amtDue) - Math.round(amtToPay))}</td>
+  //   </tr>
+  // </tfoot>
+
   htmlToAdd += `
-      <tr class="total-row">
-        <td class="company-category">Total</td>
-        <td class="company-group">${totComp}</td>
-        <td class="company">${totComp}</td>
-        <td class="tot-inv-due">${formatNumber(invDue)}</td>
-        <td class="tot-amt-due">${displayCurrency(amtDue)}</td>
-        <td class="tot-inv-rec">${formatNumber(invToPay)}</td>
-        <td class="tot-amt-rec">${displayCurrency(amtToPay)}</td>
-        <td class="tot-inv-apr">0</td>
-        <td class="tot-amt-apr">$0</td>
-        <td class="tot-inv-rem">${formatNumber(invDue - invToPay)}</td>
-        <td class="tot-amt-rem">${displayCurrency(Math.round(amtDue) - Math.round(amtToPay))}</td>
-      </tr>
     </tbody>
   `;
   dataTable.innerHTML = htmlToAdd;
+  loadFilters();
   endLoad();
 };
 
@@ -311,15 +324,17 @@ function displaySummaryTabDetail(data) {
   summaryTable.innerHTML = '';
   let htmlToAdd = `
     <thead>
-      <th>Company</th>
-      <th>Invoices Due</th>
-      <th>Amount Due</th>
-      <th>Invoices Recommended</th>
-      <th>Amount Recommended</th>
-      <th>Invoices Approved</th>
-      <th>Amount Approved</th>
-      <th>Invoices Remaining</th>
-      <th>Amount Remaining</th>
+      <tr>
+        <th>Company</th>
+        <th>Invoices Due</th>
+        <th>Amount Due</th>
+        <th>Invoices Recommended</th>
+        <th>Amount Recommended</th>
+        <th>Invoices Approved</th>
+        <th>Amount Approved</th>
+        <th>Invoices Remaining</th>
+        <th>Amount Remaining</th>
+      </tr>
     </thead>
     <tbody>
   `;
@@ -381,18 +396,20 @@ function displaySummaryTabDetail(data) {
   });
 
   htmlToAdd += `
-    <tr class="total-row" id="total-detail-summary">
-      <td class="total-label">Total</td>
-      <td class="total-inv">${formatNumber(inv)}</td>
-      <td class="total-amt">${displayCurrency(amtDue)}</td>
-      <td class="total-inv-rec">${formatNumber(invRec)}</td>
-      <td class="total-amt-rec">${displayCurrency(amtRec)}</td>
-      <td class="total-inv-apr">${formatNumber(invApr)}</td>
-      <td class="total-amt-apr">${displayCurrency(amtApr)}</td>
-      <td class="total-inv-rem">${formatNumber(invRem)}</td>
-      <td class="total-amt-rem">${displayCurrency(amtRem)}</td>
-    </tr>
-  </tbody>
+    </tbody>
+    <tfoot>
+      <tr class="total-row" id="total-detail-summary">
+        <td class="total-label">Total</td>
+        <td class="total-inv">${formatNumber(inv)}</td>
+        <td class="total-amt">${displayCurrency(amtDue)}</td>
+        <td class="total-inv-rec">${formatNumber(invRec)}</td>
+        <td class="total-amt-rec">${displayCurrency(amtRec)}</td>
+        <td class="total-inv-apr">${formatNumber(invApr)}</td>
+        <td class="total-amt-apr">${displayCurrency(amtApr)}</td>
+        <td class="total-inv-rem">${formatNumber(invRem)}</td>
+        <td class="total-amt-rem">${displayCurrency(amtRem)}</td>
+      </tr>
+    </tfoot>
   `;
   summaryTable.innerHTML = htmlToAdd;
   hideSummary();
@@ -401,20 +418,23 @@ function displaySummaryTabDetail(data) {
 
 // FUNCTION TO DISPLAY DETAIL TABLE WITH INVOICE SELECTION ON DETAIL TABS
 function paintTabTable(data) {
+  destroyTable();
   dataTable.innerHTML = '';
   let htmlToAdd = `
     <thead>
-      <th>Pay?</th>
-      <th>Amt to Pay</th>
-      <th>Amt Remaining</th>
-      <th>Status</th>
-      <th>Days Past Due</th>
-      <th>Company</th>
-      <th>Vendor Name</th>
-      <th>Invoice Desc</th>
-      <th>Bill.com</th>
-      <th>Total Amt Due</th>
-      <th>Approved?</th>
+      <tr>
+        <th>Pay?</th>
+        <th>Amt to Pay</th>
+        <th>Amt Remaining</th>
+        <th>Status</th>
+        <th>Days Past Due</th>
+        <th>Company</th>
+        <th>Vendor Name</th>
+        <th>Invoice Desc</th>
+        <th>Bill.com</th>
+        <th>Total Amt Due</th>
+        <th>Approved?</th>
+      </tr>
     </thead>
     <tbody>
   `;
@@ -434,7 +454,7 @@ function paintTabTable(data) {
         <td class="to-pay">${inv.amtToPay ? displayCurrency(inv.amtToPay) : '$0'}</td>
         <td class="amt-remaining">${inv.recommended ? displayCurrency(Math.round(inv.amount) - Math.round(inv.amtToPay)) : displayCurrency(inv.amount)}</td>
         <td>${inv.status}</td>
-        <td>${inv.dueInDays < 0 ? 'N/A' : inv.dueInDays}</td>
+        <td>${inv.dueInDays}</td>
         <td class="company" id="${inv.ap_group}">${inv.company}</td>
         <td class ="vendor">${inv.vendor}</td>
         <td class ="description">${inv.invoice_num}</td>
@@ -447,6 +467,7 @@ function paintTabTable(data) {
 
   htmlToAdd += `</tbody>`
   dataTable.innerHTML = htmlToAdd;
+  loadFilters();
   endLoad();
 };
 

@@ -5,6 +5,9 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="./styles/main.css">
+  <script src="./js/helpers/jquery.js"></script>
+  <script src="./js/helpers/dataTables.min.js"></script>
+  <script src="./js/helpers/fixedHeaders.min.js"></script>
   <title>Document</title>
 </head>
 <body>
@@ -26,8 +29,8 @@
     <table id="summary-table" class="table-styles mt-3"></table>
     <div class="input-field mt-1">
       <div class="filter-bar-container">
-        <input type="text" name="filter" id="filter" placeholder="Type to search...">
-        <a href="#" class="btn btn-dark" id="searchBtn">Filter</a>
+        <!-- <input type="text" name="filter" id="filter" placeholder="Type to search...">
+        <a href="#" class="btn btn-dark" id="searchBtn">Filter</a> -->
       </div>
       <div class="flex-btns">
         <a href="#" class="btn btn-warning" id="unapproveBtn">Unapprove All Invoices</a>
@@ -35,7 +38,9 @@
         <a href="#" class="btn btn-dark" id="hide-summary">Hide Summary</a>
       </div>
     </div>
-    <table id="data-table" class="table-styles mt-3"></table>
+    <div class="table-div">
+      <table id="data-table" class="table-styles mt-3"></table>
+    </div>
     <div id="top-btn-div">
       <button id="topBtn">Top</button>
     </div>
@@ -56,6 +61,7 @@
   </footer>
 
   <script src="./js/helpers/domo.js"></script>
+  <script src="./js/modules/filters.js"></script>
   <script src="./js/modules/ui.js"></script>
   <script src="./js/modules/data.js"></script>
   <script src="./js/modules/users.js"></script>
