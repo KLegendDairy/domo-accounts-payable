@@ -318,6 +318,10 @@ thead th:first-child {
   color: #fff !important;
 }
 
+#data-table_length {
+  margin-top: 15px;
+}
+
 #data-table_length,
 #data-table_filter,
 #data-table_paginate,

@@ -16,6 +16,7 @@ const modal = document.getElementById('modal-div');
 const modalText = document.getElementById('modal-text');
 const modalBtn = document.querySelector('.modal-btn');
 const closeModal = document.getElementById('close-modal');
+const inputField = document.querySelector('.input-field');
 
 // LOAD EVENT LISTENERS
 (function loadEventListeners() {
@@ -55,6 +56,14 @@ function devAndOther() {
   isApprover();
   getTabTableData(`/data/v1/accountsPayableData?sum=amount&groupby=unique_id,company,vendor,billDate,dueDate,dueInDays,bdcUrl,onHold,ap_group,invoice_num&filter=ap_group in ["Fund, Dev %26 Other"]`);
   getSummaryTableDetailData(`/data/v1/accountsPayableData?sum=amount&unique=unique_id&groupby=company&fields=company,amount,unique_id&filter=ap_group in ["Fund, Dev %26 Other"]`);
+};
+
+// FUNCTION TO GET PAID INVOICES AND DISPLAY THEM
+function paidInvoices() {
+  isApprover();
+  getPaidInvoiceTableData(`/data/v1/paidInvoices?sum=amount&groupby=unique_id,vendor,company,billDate,dueDate,date_paid,ap_group,company_group,invoice_num,bdcUrl&filter=`);
+  hideSummary();
+  hideSummaryBtns();
 };
 
 
@@ -147,7 +156,7 @@ function navClicked(e) {
       init();
       // filterBar.style.display = '';
   } else if(e.target.id === 'paid-invoices-link') {
-      
+      paidInvoices()
       // filterBar.style.display = 'none';
   };
 
@@ -473,6 +482,50 @@ function paintTabTable(data) {
   endLoad();
 };
 
+// FUNCTION TO DISPLAY INVOICES THAT HAVE BEEN PAID
+function paintPaidTable(data) {
+  destroyTable();
+  dataTable.innerHTML = '';
+  let htmlToAdd = `
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Vendor Name</th>  
+        <th>Invoice Desc</th>
+        <th>Amount Paid</th>
+        <th>Date Paid</th>
+        <th>Date Approved</th>
+        <th>Bill.com</th>
+      </tr>
+    </thead>
+    <tbody>
+  `;
+
+  data.forEach(inv => {
+    let aprDate;
+    if(inv.approval) {
+      aprDate = new Date(inv.approval);
+    };
+    let datePaid = new Date(inv.date_paid);
+    htmlToAdd += `
+      <tr id="row-${inv.unique_id}">
+        <td class="company-name">${inv.company}</td>
+        <td class="vendor-name">${inv.vendor}</td>
+        <td class="invoice-description">${inv.invoice_num}</td>
+        <td class="amount-paid">${displayCurrency(inv.amount)}</td>
+        <td class="date-paid">${(datePaid.getMonth() + 1) + '/' + datePaid.getDate() + '/' + datePaid.getFullYear()}</td>
+        <td class="date-approved">${inv.approval ? (aprDate.getMonth() + 1) + '/' + aprDate.getDate() + '/' + aprDate.getFullYear() : 'Not Approved'}</td>
+        <td class="bill-url">${inv.bdcUrl ? '<a href="' + inv.bdcUrl + '" target="_blank">' + inv.unique_id + '</a>' : ''}</td>
+      </tr>
+    `;
+  });
+
+  htmlToAdd += `</tbody>`
+  dataTable.innerHTML = htmlToAdd;
+  loadFilters();
+  endLoad();
+}
+
 
 // ===================== INVOICE APPROVAL FUNCTIONS =====================
 
@@ -771,11 +824,22 @@ function toggleSummary(e) {
 function hideSummary() {
   summaryTable.style.display = 'none';
   sumBtn.innerHTML = 'Show Summary';
+  if(!paidBtn.classList.contains('selected')) {
+    showSummaryBtns();
+  };
 };
 function showSummary() {
   summaryTable.style.display = '';
   sumBtn.innerHTML = 'Hide Summary';
 }
+
+// HIDE ALL SUMMARY ITEMS ON THE PAID INVOICES PAGE
+function hideSummaryBtns() {
+  inputField.style.display = 'none';
+};
+function showSummaryBtns() {
+  inputField.style.display = '';
+};
 
 // HIDE AND SHOW MODAL FUNCTIONS
 function showModal(text, btnText, btnId) {

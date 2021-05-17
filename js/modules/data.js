@@ -16,11 +16,18 @@ function getSummaryTableData(url, query) {
           amountDue: item[2]
         });
       });
-      domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.ap_group&count=documentCount&sum=content.amt_to_pay`,{})
+      domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.ap_group&count=documentCount&sum=content.amt_to_pay`,{
+        "content.paid": {
+          $ne: 'true'
+        }
+      })
         .then(data => {
           domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.ap_group&count=documentCount&sum=content.amt_to_pay&filter=`,{
             "content.approved": {
               $eq: 'true'
+            },
+            "content.paid": {
+              $ne: 'true'
             }
           })
             .then(newData => {
@@ -59,11 +66,18 @@ function getInitTableData(query) {
       data.forEach(item => {
         resData.push(item);
       });
-      domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.company&count=documentCount&sum=content.amt_to_pay`,{})
+      domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.company&count=documentCount&sum=content.amt_to_pay`,{
+        "content.paid": {
+          $ne: 'true'
+        }
+      })
         .then(appData => {
           domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.company&count=documentCount&sum=content.amt_to_pay&filter=`,{
             "content.approved": {
               $eq: 'true'
+            },
+            "content.paid": {
+              $ne: 'true'
             }
           })
             .then(newData => {
@@ -105,11 +119,18 @@ function getSummaryTableDetailData(query) {
       data.forEach(inv => {
         resData.push(inv);
       });
-      domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.company&count=documentCount&sum=content.amt_to_pay`,{})
+      domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.company&count=documentCount&sum=content.amt_to_pay`,{
+        "content.paid": {
+          $ne: 'true'
+        }
+      })
         .then(data => {
           domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.company&count=documentCount&sum=content.amt_to_pay&filter=`,{
             "content.approved": {
               $eq: 'true'
+            },
+            "content.paid": {
+              $ne: 'true'
             }
           })
           .then(newData => {
@@ -144,7 +165,11 @@ function getSummaryTableDetailData(query) {
 // QUERY MGT AND PROP CO DETAIL DATA
 function getTabTableData(query) {
   startLoad();
-  domo.get(`/domo/datastores/v1/collections/ap-app-data/documents/`)
+  domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query`, {
+    "content.paid": {
+      $ne: 'true'
+    }
+  })
     .then(appData => {
       let db = [];
       let obj = [];
@@ -324,6 +349,149 @@ function unapproveAllInvoices() {
       .catch(err => console.log(err));
     })
     .catch(err => console.log(err));
+};
+
+
+// ================ GET PAID INVOICE DATA AND SYNC PAID INVOICE DATA ================
+
+// GET PAID INVOICE DATA TO POPULATE TABLES
+function getPaidInvoiceTableData(query) {
+  startLoad();
+  
+  domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query`, {
+    "content.paid": {
+      $ne: 'true'
+    }
+  })
+    .then(appData => {
+      let db = [];
+      let obj = [];
+      let responseData = [];
+      let reqBody = [];
+      let temp = {};
+      if(appData.length > 0) {
+        appData.forEach(inv => {
+          const id = inv.content.unique_id.toString();
+          const objId = inv.id;
+          const amtToPay = inv.content.amt_to_pay;
+          let approval = inv.content.approval_timestamp;
+          
+          db.push(id);
+          obj.push({
+            id,
+            objId,
+            amtToPay,
+            approval
+          });
+        });
+      };
+      if(db.length > 0) {
+        domo.get(`${query}unique_id in [${db.toString()}]`)
+          .then(data => {
+            if(data.length > 0) {
+              data.sort((a,b) => {
+                return b.amount - a.amount
+              });
+              data.forEach(inv => {
+                responseData.push(inv);
+              });
+              obj.forEach(item => {
+                index = responseData.findIndex(inv => inv.unique_id == item.id);
+                if(index !== -1) {
+                  responseData[index].objId = item.objId;
+                  responseData[index].amtToPay = item.amtToPay;
+                  if(item.approval) {
+                    responseData[index].approval = item.approval;
+                  };
+                };
+                temp = {};
+                temp.id = item.objId;
+                temp.content.paid = 'true';
+                reqBody.push(temp);
+              });
+              paintPaidTable(responseData);
+              domo.put(`/domo/datastores/v1/collections/ap-app-data/documents/bulk`, reqBody);
+            } else {
+              paintPaidTable([]);
+            };
+          })
+          .catch(err => console.log(err));
+      } else {
+        paintPaidTable([]);
+      };
+      })
+    .catch(err => console.log(err));
+};
+
+// FUNCTION TO SYNC PAID INVOICES ON LOAD
+function paidCheck() {
+  startLoad();
+  return new Promise((resolve, reject) => {
+    domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query`, {
+      "content.paid": {
+        $ne: 'true'
+      }
+    })
+    .then(appData => {
+      let db = [];
+      let obj = [];
+      let responseData = [];
+      let reqBody = [];
+      let temp = {};
+      if(appData.length > 0) {
+        appData.forEach(inv => {
+          const id = inv.content.unique_id.toString();
+          const objId = inv.id;
+          const amtToPay = inv.content.amt_to_pay;
+          let approval = inv.content.approval_timestamp;
+          
+          db.push(id);
+          obj.push({
+            id,
+            objId,
+            amtToPay,
+            approval
+          });
+        })
+      };
+      if(db.length > 0) {
+        domo.get(`/data/v1/paidInvoices?sum=amount&groupby=unique_id,vendor,company,billDate,dueDate,date_paid,ap_group,company_group,invoice_num,bdcUrl&filter=unique_id in [${db.toString()}]`)
+          .then(data => {
+            if(data.length > 0) {
+              data.sort((a,b) => {
+                return b.amount - a.amount
+              });
+              data.forEach(inv => {
+                responseData.push(inv);
+              });
+              obj.forEach(item => {
+                index = responseData.findIndex(inv => inv.unique_id == item.id);
+                if(index !== -1) {
+                  responseData[index].objId = item.objId;
+                  responseData[index].amtToPay = item.amtToPay;
+                  if(item.approval) {
+                    responseData[index].approval = item.approval;
+                  };
+                };
+                temp = {};
+                temp.id = item.objId;
+                temp.content.paid = 'true';
+                reqBody.push(temp);
+              });
+              domo.put(`/domo/datastores/v1/collections/ap-app-data/documents/bulk`, reqBody)
+                .then(data => {
+                  resolve('done');
+                })
+                .catch(err => reject(err));
+            };
+            resolve('done');
+          })
+          .catch(err => reject(err));
+      };
+      resolve('done')
+      })
+    .catch(err => reject(err));
+  });
 };
 
 

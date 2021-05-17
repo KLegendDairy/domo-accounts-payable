@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "size": {
     "width": 7,
-    "height": 3
+    "height": 2
   },
   "mapping": [
     {
@@ -22,7 +22,23 @@
         { "alias": "ap_group", "columnName": "company_ap_group" },
         { "alias": "company_group", "columnName": "company_group" },
         { "alias": "invoice_num", "columnName": "Invoice" }
-
+      ]
+    },
+    {
+      "dataSetId": "dd1b0718-3eb4-48be-88da-8101c58f7668",
+      "alias": "paidInvoices",
+      "fields": [
+        { "alias": "amount", "columnName": "Amount Paid" },
+        { "alias": "company", "columnName": "Community" },
+        { "alias": "unique_id", "columnName": "unique_id" },
+        { "alias": "vendor", "columnName": "VENDORNAME" },
+        { "alias": "bdcUrl", "columnName": "BILL_URL" },
+        { "alias": "billDate", "columnName": "Bill Date" },
+        { "alias": "dueDate", "columnName": "Due Date" },
+        { "alias": "ap_group", "columnName": "company_ap_group" },
+        { "alias": "company_group", "columnName": "company_group" },
+        { "alias": "invoice_num", "columnName": "Invoice" },
+        { "alias": "date_paid", "columnName": "bill_paid" }
       ]
     }
   ],
@@ -38,7 +54,8 @@
           { "name": "total_inv_amt", "type": "DECIMAL" },
           { "name": "rec_for_pmt_timestamp", "type": "DATETIME" },
           { "name": "approved", "type": "STRING" },
-          { "name": "approval_timestamp", "type": "DATETIME" }
+          { "name": "approval_timestamp", "type": "DATETIME" },
+          { "name": "paid", "type": "STRING" }
         ]
       }
     }
