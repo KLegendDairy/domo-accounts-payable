@@ -374,14 +374,24 @@ function getPaidInvoiceTableData(query) {
           const id = inv.content.unique_id.toString();
           const objId = inv.id;
           const amtToPay = inv.content.amt_to_pay;
+          let approved = inv.content.approved;
           let approval = inv.content.approval_timestamp;
+          const ap_group = inv.content.ap_group;
+          const company = inv.content.company;
+          const total_inv_amt = inv.content.total_inv_amount;
+          const rec_for_pmt_timestamp = inv.content.rec_for_pmt_timestamp;
           
           db.push(id);
           obj.push({
             id,
             objId,
             amtToPay,
-            approval
+            approved,
+            approval,
+            ap_group,
+            company,
+            total_inv_amt,
+            rec_for_pmt_timestamp
           });
         });
       };
@@ -403,24 +413,67 @@ function getPaidInvoiceTableData(query) {
                   if(item.approval) {
                     responseData[index].approval = item.approval;
                   };
+                  temp = {};
+                  temp.id = item.objId;
+                  temp.content = {
+                    ap_group: item.ap_group,
+                    company: item.company,
+                    unique_id: item.unique_id,
+                    amt_to_pay: item.amtToPay,
+                    total_inv_amt: item.amount,
+                    rec_for_pmt_timestamp: item.rec_for_pmt_timestamp,
+                    approved: item.approval,
+                    approval_timestamp: item.approval
+                  };
+                  temp.content.paid = 'true';
+                  reqBody.push(temp);
                 };
-                temp = {};
-                temp.id = item.objId;
-                temp.content.paid = 'true';
-                reqBody.push(temp);
               });
-              paintPaidTable(responseData);
               domo.put(`/domo/datastores/v1/collections/ap-app-data/documents/bulk`, reqBody);
+              domo.get(`${query}unique_id !in [${db.toString()}]`)
+                .then(paidInv => {
+                  paidInv.sort((a,b) => {
+                    return b.amount - a.amount;
+                  });
+                  paidInv.forEach(inv => {
+                    responseData.push(inv);
+                  });
+                  responseData.sort((a,b) => {
+                    return b.amount - a.amount;
+                  });
+                  paintPaidTable(responseData);
+                })
+                .catch(err => console.log(err));
             } else {
-              paintPaidTable([]);
+              domo.get(`${query}`)
+                .then(data => {
+                  data.sort((a,b) => {
+                    return b.amount - a.amount;
+                  });
+                  data.forEach(inv => {
+                    responseData.push(inv);
+                  });
+                  paintPaidTable(responseData);
+                })
+                .catch(err => console.log(err));
             };
           })
           .catch(err => console.log(err));
       } else {
-        paintPaidTable([]);
-      };
+        domo.get(`${query}`)
+          .then(data => {
+            data.sort((a,b) => {
+              return b.amount - a.amount;
+            });
+            data.forEach(inv => {
+              responseData.push(inv);
+            });
+            paintPaidTable(responseData);
+          })
+          .catch(err => console.log(err));
+        };
       })
-    .catch(err => console.log(err));
+      .catch(err => console.log(err));
 };
 
 // FUNCTION TO SYNC PAID INVOICES ON LOAD
@@ -443,14 +496,24 @@ function paidCheck() {
           const id = inv.content.unique_id.toString();
           const objId = inv.id;
           const amtToPay = inv.content.amt_to_pay;
+          let approved = inv.content.approved;
           let approval = inv.content.approval_timestamp;
+          const ap_group = inv.content.ap_group;
+          const company = inv.content.company;
+          const total_inv_amt = inv.content.total_inv_amount;
+          const rec_for_pmt_timestamp = inv.content.rec_for_pmt_timestamp;
           
           db.push(id);
           obj.push({
             id,
             objId,
             amtToPay,
-            approval
+            approved,
+            approval,
+            ap_group,
+            company,
+            total_inv_amt,
+            rec_for_pmt_timestamp
           });
         })
       };
@@ -472,11 +535,21 @@ function paidCheck() {
                   if(item.approval) {
                     responseData[index].approval = item.approval;
                   };
+                  temp = {};
+                  temp.id = item.objId;
+                  temp.content = {
+                    ap_group: item.ap_group,
+                    company: item.company,
+                    unique_id: item.unique_id,
+                    amt_to_pay: item.amtToPay,
+                    total_inv_amt: item.amount,
+                    rec_for_pmt_timestamp: item.rec_for_pmt_timestamp,
+                    approved: item.approval,
+                    approval_timestamp: item.approval
+                  };
+                  temp.content.paid = 'true';
+                  reqBody.push(temp);
                 };
-                temp = {};
-                temp.id = item.objId;
-                temp.content.paid = 'true';
-                reqBody.push(temp);
               });
               domo.put(`/domo/datastores/v1/collections/ap-app-data/documents/bulk`, reqBody)
                 .then(data => {
