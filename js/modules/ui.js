@@ -571,44 +571,6 @@ async function unapproveInvoices(e) {
 
 // ===================== FUNCTIONS FOR UI INTERACTIONS =====================
 
-// FILTER BAR
-// function filterList(e) {
-//   const text = e.target.value.toLowerCase();
-//   let company = '';
-//   let group = '';
-//   let category = '';
-//   let newAmt = 0;
-//   let amount = '';
-
-//   for (i = 1; i < tableRow.length; i++) {
-//     let row = tableRow[i];
-
-//     let compEl = row.getElementsByClassName('company');
-//     let groupEl = row.getElementsByClassName('company-group');
-//     let categoryEl = row.getElementsByClassName('company-category');
-//     let amtEl = row.getElementsByClassName('amount');
-
-//     company = compEl.length !== 0 ? compEl[0].innerText : '';
-//     group = groupEl.length !== 0 ? groupEl[0].innerText : '';
-//     category = categoryEl.length !== 0 ? categoryEl[0].innerText : '';
-//     amount = amtEl.length !==0 ? amtEl[0].innerText : '';
-
-//     if(company.toLowerCase().indexOf(text) !== -1 || group.toLowerCase().indexOf(text) !== -1 || category.toLowerCase().indexOf(text) !== -1) {
-//       row.style.display = '';
-//       newAmt += parseFloat(amount.replace(/[$,]+/g,""));
-//     } else {
-//       row.style.display = 'none';
-//     };
-//   };
-
-//   let newRemaining = newAmt - parseFloat(amtToPayHead.innerText.replace(/[$,]+/g,""))
-
-//   totalDue.innerHTML = displayCurrency(newAmt);
-//   amtRemainingHead.innerHTML = displayCurrency(newRemaining);
-
-//   e.preventDefault();
-// };
-
 // CHECKING OF CHECKBOXES
 function checkBoxCheck(e) {
   if(e.target.classList.contains('recommend-check')) {

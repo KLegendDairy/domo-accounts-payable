@@ -4,7 +4,7 @@ async function isApprover() {
   const areApproved = await getInvDetails();
   domo.get(`/domo/users/v1/${userId}?includeDetails=true`)
   .then(data => {
-    if(data.displayName === 'Kevin Larrivee' || data.displayName === 'Bill Johnston') {
+    if(data.displayName === 'Kevin Larrivee' || data.displayName === 'Bill Johnston' || data.displayName === 'Ian Schembri') {
       approveBtn.style.display = 'block';
       if(areApproved.inv > 0) {
         unapproveBtn.style.display = 'block';
