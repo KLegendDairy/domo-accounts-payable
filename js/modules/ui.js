@@ -61,7 +61,7 @@ function devAndOther() {
 // FUNCTION TO GET PAID INVOICES AND DISPLAY THEM
 function paidInvoices() {
   isApprover();
-  getPaidInvoiceTableData(`/data/v1/paidInvoices?sum=amount&groupby=unique_id,vendor,company,billDate,dueDate,date_paid,ap_group,company_group,invoice_num,bdcUrl&filter=`);
+  getPaidInvoiceTableData(`/data/v1/paidInvoices?sum=amount&groupby=unique_id,vendor,company,billDate,dueDate,date_paid,ap_group,company_group,invoice_num,bdcUrl`);
   hideSummary();
   hideSummaryBtns();
 };
