@@ -27,7 +27,7 @@ function loadFilters() {
   table = $('#data-table').DataTable( {
       orderCellsTop: true,
       autoWidth: true,
-      lengthMenu: [10,25,50,75,100,250,500,750,1000]
+      lengthMenu: [[10,25,50,75,100,250,500,750,1000, -1], [10,25,50,75,100,250,500,750,1000, "All"]]
     //   fixedHeader: true
   } );
 };
