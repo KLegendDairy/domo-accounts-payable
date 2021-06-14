@@ -491,7 +491,11 @@ function paidCheck() {
 // GET INVOICES RECOMMENDED DATA
 function getInvDetails() {
   return new Promise((resolve, reject) => {
-    domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.approved&count=documentCount&sum=content.amt_to_pay`,{})
+    domo.post(`/domo/datastores/v1/collections/ap-app-data/documents/query?groupby=content.approved&count=documentCount&sum=content.amt_to_pay`,{
+      "content.paid": {
+        $ne: 'true'
+      }
+    })
       .then(data => {
         const dataToSend = {};
         data.forEach(item => {
