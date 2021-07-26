@@ -158,7 +158,7 @@ function navClicked(e) {
       init();
       // filterBar.style.display = '';
   } else if(e.target.id === 'paid-invoices-link') {
-      paidInvoices()
+      paidInvoices();
       // filterBar.style.display = 'none';
   };
 
@@ -249,6 +249,7 @@ function displaySummaryTab(data) {
   `;
   summaryTable.innerHTML = htmlToAdd;
   showSummary();
+  showSummaryBtns();
   endLoad();
 };
 
@@ -428,6 +429,7 @@ function displaySummaryTabDetail(data) {
   `;
   summaryTable.innerHTML = htmlToAdd;
   hideSummary();
+  showSummaryBtns();
   endLoad();
 };
 
