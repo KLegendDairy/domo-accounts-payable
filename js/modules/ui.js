@@ -17,6 +17,7 @@ const modalText = document.getElementById('modal-text');
 const modalBtn = document.querySelector('.modal-btn');
 const closeModal = document.getElementById('close-modal');
 const inputField = document.querySelector('.input-field');
+const dateUpdated = document.getElementById('last-updated');
 
 // LOAD EVENT LISTENERS
 (function loadEventListeners() {
@@ -42,6 +43,7 @@ function init() {
   isApprover();
   getSummaryTableData(`/sql/v1/accountsPayableData`, `SELECT company_ap_group, COUNT(DISTINCT CONCAT(\`unique_id\`,\`Community\`)), SUM(\`Amount Left To Pay\`) FROM accountsPayableData GROUP BY company_ap_group`);
   getInitTableData(`/data/v1/accountsPayableData?sum=amount&unique=unique_id&groupby=company,company_group,ap_group&fields=company,company_group,ap_group,amount,unique_id`);
+  updatingDate();
 };
 
 // FUNCTION TO DISPLAY MGT & PROP TABLE
@@ -166,6 +168,10 @@ function navClicked(e) {
   e.preventDefault();
 };
 
+// ===================== DATE UPDATED  =====================
+function updateDate(data) {
+  dateUpdated.innerHTML = data;
+} ;
 
 // ===================== DATA TABLE ITEMS =====================
 

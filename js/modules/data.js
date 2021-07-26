@@ -485,6 +485,26 @@ function paidCheck() {
   });
 };
 
+// ================ GET DATA TO UPDATE DATE ================
+
+function updatingDate() {
+  domo.get('/data/v1/accountsPayableData?min=last_updated')
+            .then(first => {
+                const data = []
+                data.push(first[0])
+                domo.get('/data/v1/paidInvoices?min=last_updated')
+                    .then(second => {
+                        data.push(second[0])
+                        data.sort((a,b) => {
+                            return new Date(a.last_updated) - new Date(b.last_updated)
+                        });
+                        const dt = new Date(data[0].last_updated)
+                        updateDate(dt.toDateString() + ' ' + dt.toLocaleTimeString());
+                    })
+                    .catch(err => console.log(err));
+            })
+            .catch(err => console.log(err));
+  };
 
 // ================ GET DETAILS FOR UI INTERACTION ================
 

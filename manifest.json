@@ -21,7 +21,8 @@
         { "alias": "dueDate", "columnName": "Due Date" },
         { "alias": "ap_group", "columnName": "company_ap_group" },
         { "alias": "company_group", "columnName": "company_group" },
-        { "alias": "invoice_num", "columnName": "Invoice" }
+        { "alias": "invoice_num", "columnName": "Invoice" },
+        { "alias": "last_updated", "columnName": "last_updated" }
       ]
     },
     {
@@ -38,7 +39,8 @@
         { "alias": "ap_group", "columnName": "company_ap_group" },
         { "alias": "company_group", "columnName": "company_group" },
         { "alias": "invoice_num", "columnName": "Invoice" },
-        { "alias": "date_paid", "columnName": "bill_paid" }
+        { "alias": "date_paid", "columnName": "bill_paid" },
+        { "alias": "last_updated", "columnName": "last_updated" }
       ]
     }
   ],

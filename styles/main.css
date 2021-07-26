@@ -388,6 +388,16 @@ input[type="search"]::placeholder {
   color: #fff;
 }
 
+/* LAST UPDATED */
+.last-updated-cont {
+  padding-top: 20px;
+  width: 90%;
+  display: flex;
+}
+#last-updated-text {
+  text-align: left;
+}
+
 /* TOP BUTTON */
 #top-btn-div {
   display: relative;
